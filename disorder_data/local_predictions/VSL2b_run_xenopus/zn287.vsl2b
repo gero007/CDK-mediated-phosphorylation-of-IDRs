@@ -1,0 +1,7 @@
+ERROR: The input sequence should contain single-letter AA code only (no FASTA header, no 'X', 'Y', 'Z', or other characters
+ERROR: Amino acid sequence should be loaded first!!
+VSL2 Predictor of Intrinsically Disordered Regions
+Center for Information Science and Technology
+Temple University, Philadelphia, PA
+ 
+Predicted Disordered Regions:

@@ -1,0 +1,1621 @@
+---
+title: "A CDK-mediated phosphorylation switch of disordered protein condensation"
+output:
+  html_document:
+    df_print: paged
+    fig_caption: yes
+  pdf_document: default
+params:
+  d: !r Sys.Date()
+---
+updated: `r params$d`  
+
+```{r setup and data loading,echo=FALSE,message=FALSE,warning=FALSE,prompt=FALSE}
+# Libraries required
+library(jsonlite)
+library(readr)
+library(ggplot2)
+library(GGally)
+library(vcd)
+library(kableExtra)
+library(ggpubr)
+# library(Rcpi)
+#if fails => sudo R CMD javareconf; reinstall; reboot R
+library(Biostrings)
+library(eulerr)
+library(flextable)
+library(stringr)
+library(DT)
+library(dplyr)
+library(tidyr)
+library(RColorBrewer)
+library(reshape2)
+library(AnnotationDbi)
+library(ggridges)
+library(hrbrthemes)
+library(ggrepel)
+library(ggsci)
+library(scales)
+
+# load the function for obtaining disorder metrics from diferent predictors
+source("auxiliary_functions/getDisorder_V2.R")
+# load function to generate contingency tables from phosphorylation data
+source("auxiliary_functions/contingencyTablesAnalysis_V2.R")
+
+
+#################################
+######## Disorder data ##########
+#################################
+
+
+# ___________Disorder_____________
+
+# YEAST
+
+yeastDiso<-stream_in(con = file("disorder_data/MobiDB/yeast_mobiDB_full.mjson"),verbose = F)
+yeastDiso$mobidb_data <- yeastDiso$mobidb_data$disorder
+colnames(yeastDiso)[2] <- "disorder"
+
+yeast_uniprot_table <- read_delim("uniprot_data/yeast_UniprotID_reviewed.tab", "\t", escape_double = FALSE, trim_ws = TRUE)
+
+yeastDiso <- merge.data.frame(yeastDiso,yeast_uniprot_table,by.x = "acc",by.y = "Entry")
+
+yeastDiso_full <- getMobiDB_PredDiso(yeastDiso,"acc",sequence_col = "Sequence")
+## addd SPOT
+yeastDiso_full <- getSpotPredDiso(yeastDiso_full,disoPath = "disorder_data/local_predictions/spot_run_yeast/",accession_col = "acc",length_col = "Length",sequence_col = "Sequence")
+
+# HUMAN
+
+humanDiso<-stream_in(con = file("disorder_data/MobiDB/HS_mobiDB_full.mjson"),verbose = F)
+humanDiso$mobidb_data <- humanDiso$mobidb_data$disorder
+colnames(humanDiso)[2] <- "disorder"
+
+human_uniprot_table <- read_delim("uniprot_data/HS_UniprotID_reviewed.tab", "\t", escape_double = FALSE, trim_ws = TRUE)
+
+humanDiso <- merge.data.frame(humanDiso,human_uniprot_table,by.x = "acc",by.y = "Entry")
+# the entry number 3972 in mobidb is broken. I remove it now
+humanDiso <- humanDiso[-3971,]
+humanDiso_full <- getMobiDB_PredDiso(humanDiso,"acc",sequence_col = "Sequence")
+humanDiso_full <- getSpotPredDiso(humanDiso_full,disoPath = "disorder_data/local_predictions/spot_run_human/",accession_col = "acc",length_col = "Length",sequence_col = "Sequence")
+
+
+# Load Xenopus non-redundant sequence database used for proteomic approaches 
+xenopus_MPI<-readAAStringSet("MPI_xenopus_database/Xenopus_Database_MPI.FASTA",format = "fasta")
+xenopusDiso<-as.data.frame(xenopus_MPI)
+colnames(xenopusDiso)<-"Sequence"
+xenopusDiso$ID <- str_extract(names(xenopus_MPI), regex( "(?<=\\|)(.*)"))
+row.names(xenopusDiso) <- NULL
+xenopusDiso$Length <-nchar(xenopusDiso$Sequence)
+# The ID mapping between Uniprot and MPI databases can be complex. That rules out the utilization of MobiDB as a disorder information source. For xenopus we calculate manually the values of disorder for its entire proteome using 3 predictors 
+xenopusDiso <- getIUpredPredDiso(df = xenopusDiso,disoPath = "disorder_data/local_predictions/IUpred_run_xenopus/",sequence_col = "Sequence",accession_col = "ID",length_col = "Length")
+xenopusDiso <- getVSLPredDiso(df = xenopusDiso,disoPath = "disorder_data/local_predictions/VSL2b_run_xenopus//",sequence_col = "Sequence",accession_col = "ID",length_col = "Length")
+xenopusDiso <- getSpotPredDiso(df = xenopusDiso,disoPath = "disorder_data/local_predictions/spot_run_xenopus/",sequence_col = "Sequence",accession_col = "ID",length_col = "Length")
+
+
+###### CDK1 targets data ########
+#################################
+
+# Yeast
+## ___________Ubersax data_____________
+ubersax_data <- read_delim("phosphorylation_data/Ubersax_CDK1targetSCereviseae.csv", 
+                          "\t", quote = "\\\"", escape_double = FALSE, 
+                          col_types = cols(X1 = col_skip(), input = col_skip(), 
+                          `yourlist:M201907046746803381A1F0E0DB47453E0216320D4B0BD1N` = col_skip()), 
+                          trim_ws = TRUE)
+
+# Now the comumn "disorder" is a unnamed list with a complex structure for each row of the data frame
+
+#The row 294 cannot be mapped with the uniprot, I will remove it from CDK1targetsSacCer and yeastDisoCDK1target. Slect only the rows wuth P-score > 2 most likely targets based on the paper
+
+ubersax_data<-ubersax_data[-294,]
+# ubersax_data <- merge.data.frame(ubersax_data,yeastDiso_full,by.x = "Entry",by.y = "acc")
+# After the merging 7 uncharacterized protein are left out the dataset. n=680
+
+# SPOT
+# Not for now
+# ubersax_data$dbDisoPerc <- yeastDiso_ubersax_subset$dbDisoPerc
+# ubersax_data$predSpotDisoPerc <- yeastDiso_ubersax_subset$predSpotDisoPerc
+
+# ubersax_data$target<-cut(ubersax_data$`P-Score`,breaks = c(2),labels = c("Non Cdk1 target","Cdk1 target"))
+ubersax_data$target<-cut(ubersax_data$`P-Score`,breaks = c(-Inf,2,Inf),labels = c("Non Cdk1 target","Cdk1 target"),right = F)
+ubersax_data$target <- relevel(factor(ubersax_data$target),"Cdk1 target")
+ubersax_data$targetStrict<-cut(ubersax_data$`P-Score`,breaks = c(-Inf,3,Inf),labels = c("Non Cdk1 target","Cdk1 target"),right = F)
+ubersax_data$targetStrict <- relevel(factor(ubersax_data$targetStrict),"Cdk1 target")
+
+## ___________Holt Data_____________
+uniprot_yeast <- read_delim("uniprot_data/uniprot_yeast.tab",
+"\t", escape_double = FALSE, trim_ws = TRUE)
+holt_MS <- read_delim("phosphorylation_data/Holt_CDK1target_SPombe.tsv",
+"\t", escape_double = FALSE, trim_ws = TRUE)
+
+#Remove phosphoTyrosines
+holt_MS<-subset(holt_MS,!substr(site,start = 1,stop = 1)=="Y")
+#Add Uniprot accesion. 58 entries lost (out of 9067) due to ID conversion
+holt_MS <- holt_MS[which(holt_MS$ORF %in% uniprot_yeast$OLN),]
+
+holt_MS$Uniprot <- uniprot_yeast$`Swiss-Prot-AC`[base::match(holt_MS$ORF,uniprot_yeast$OLN)]
+
+# Create a new column indicating which sites are considered to be phosphorylated 
+holt_MS <- holt_MS %>% mutate(psite=case_when(
+    `log2H/L_asynchronous`<(-1)|`log2H/L_nocodazole`<(-1)|`log2H/L_clb2`<(-1) ~ " phosphorylated",
+    TRUE ~ " non phosphorylated"
+))
+holt_MS$psite <- factor(holt_MS$psite)
+holt_MS$psite <- relevel(holt_MS$psite,ref = " phosphorylated")
+
+# Create a new column indicating which sites are considered to be phosphorylated in an CDK consensus motif 
+holt_MS <- holt_MS %>% mutate(consensus_psite=case_when(
+    (`log2H/L_asynchronous`<(-1)|`log2H/L_nocodazole`<(-1)|`log2H/L_clb2`<(-1)) & grepl("[st]P",centered_15mer) ~ " phosphorylated" ,
+    TRUE ~ " non phosphorylated"
+))
+holt_MS$consensus_psite <- factor(holt_MS$consensus_psite)
+holt_MS$consensus_psite <- relevel(holt_MS$consensus_psite,ref = " phosphorylated")
+
+# The summarise function substrings the sites for removing the first letter, indicating the residue. Since I have to apply the same function for all the columns to be summarized, I added an space at the beginning of the psite and psites values and like this I don't loose the first letter
+# the columns site, psite, and psite consensus are merged in a string separated by commas and grouped by uniprot ID
+holt_data <- holt_MS %>% group_by(Uniprot) %>% summarise_at(c("site","psite","consensus_psite"),function(x){paste(substring(x,2,1000), collapse=",")})
+
+# Convert the psites and consensus_psite columns in target_all and target_consensus columns respectively. If one of the psites is phosphorylated by CDK thats consider a CDK target
+
+holt_data <- holt_data %>% mutate(target_all=case_when(
+    grepl(psite,pattern = "(,|^)phosphorylated") ~ "Cdk1 target",
+    TRUE ~ "Non Cdk1 target"
+))
+
+holt_data <- holt_data %>% mutate(target_consensus=case_when(
+    grepl(consensus_psite,pattern = "(,|^)phosphorylated") ~ "Cdk1 target",
+    TRUE ~ "Non Cdk1 target"
+))
+
+# Tibble doesn't like list and vectors as values, it's easier to reconvert to DF
+holt_data <- as.data.frame(holt_data)
+# Select which psites are cdk psites with and withouth consensus
+## site is a vector now
+holt_data$site <- lapply(holt_data$site, function(x){as.numeric(strsplit(x,',')[[1]])})
+## psite and consensus_psite are logical vectors with TRUE="phosphorylated" and FALSE="non phosphorylated"
+holt_data$psite <- lapply(holt_data$psite, function(x){strsplit(x,',')[[1]]=="phosphorylated"})
+holt_data$consensus_psite <- lapply(holt_data$consensus_psite, function(x){strsplit(x,',')[[1]]=="phosphorylated"})
+
+psites <- list()
+consensus_psites <- list()
+for (i in 1:nrow(holt_data)) {
+  psites[[i]] <- holt_data$site[[i]][holt_data$psite[[i]]]
+  consensus_psites[[i]] <- holt_data$site[[i]][holt_data$consensus_psite[[i]]]
+}
+holt_data$psite <- psites
+holt_data$consensus_psite <- consensus_psites
+rm(psites,consensus_psites)
+
+## ___________Intersection yeast_____________
+
+# The universe is the union between Holt and Ubersax
+yeastIntersect_All_data <- merge.data.frame(ubersax_data[,c("Entry","target","targetStrict")],
+                                            holt_data[,c("Uniprot","site","psite","consensus_psite","target_all","target_consensus")],
+                                            by.x = "Entry", by.y = "Uniprot",all = T)
+
+ yeastIntersect_All_data <- yeastIntersect_All_data %>% mutate(target_intersect=case_when(
+    ((target=="Cdk1 target") & (target_all=="Cdk1 target")) ~ "Cdk1 target",
+    TRUE ~ "Non Cdk1 target"
+)) %>% as.data.frame()
+
+#####Add disorder to yeast DATA
+# Ubersax
+ubersax_data <- merge.data.frame(ubersax_data,yeastDiso_full,by.x = "Entry",by.y = "acc")
+ubersax_data$MW_kDa<-(ubersax_data$Length*120)/1000
+ubersax_data$nmol<- (ubersax_data$`Protein Level`/ubersax_data$MW_kDa)/1000
+ubersax_data$nEq_STP<- ubersax_data$nmol*ubersax_data$`[ST]-P`
+ubersax_data$nEq_STPXKR<- ubersax_data$nmol*ubersax_data$`[ST]-P-X-[KR]`
+
+# 4 Entries are lost in the conversion, 2 of them target_all="CDK1 target"
+# Holt
+holt_data<-merge.data.frame(holt_data,yeastDiso_full,by.x = "Uniprot",by.y = "acc")
+# adding number of consensus
+holtMinCons <- sapply(holt_data$Sequence,function(x){index<-unlist(gregexpr("[ST]P",x),use.names = F)
+                                                      if (index[1]==-1) {return(0)
+                                                      } else {return(length(index))}})
+names(holtMinCons) <- NULL 
+holtFullCons <- sapply(holt_data$Sequence,function(x){index<-unlist(gregexpr("[ST]P.[KR]",x),use.names = F)
+                                                      if (index[1]==-1) {return(0)
+                                                      } else {return(length(index))}})
+names(holtFullCons) <- NULL 
+
+holt_data$`[ST]-P-X-[KR]`<-holtFullCons
+holt_data$`[ST]-P`<-holtMinCons
+
+# Intersection
+## add disorder MobiDB
+yeastIntersect_All_data <- merge.data.frame(yeastIntersect_All_data,yeastDiso_full,by.x = "Entry",by.y = "acc")
+
+yeastIntersect_CDK1_data <- subset(yeastIntersect_All_data, (target_all == "Cdk1 target") & (target=="Cdk1 target"))
+
+# Human
+## ___________Phosphosite Human Data_____________
+
+human_data <- read_delim("phosphorylation_data/phosphositePlus_data/human_data_curated_V2_cleaned.tab", 
+    "\t", escape_double = FALSE, col_types = cols(MOD_RSD = col_character()), 
+    trim_ws = TRUE)
+
+human_data$psite_CDK1 <- lapply(human_data$MOD_RSD, function(x){ return(as.numeric(strsplit(x,",")[[1]]))})
+human_data$target <- rep("Cdk1 target",nrow(human_data))
+human_data$target <- as.factor(human_data$target)
+
+# human_data <- human_data[,c("GENE","PROTEIN","ACC#","MOD_RSD","target","psite_CDK1","KINASE")]
+
+## ___________Phosphosite Human Universe_____________
+# Load all the phosphosites in the phosphosite plus database 
+human_universe_data <- read_delim("phosphorylation_data/phosphositePlus_data/Phosphorylation_site_dataset", 
+    "\t", escape_double = FALSE, col_types = cols(HU_CHR_LOC = col_skip(), 
+        SITE_GRP_ID = col_skip(), MW_kD = col_skip(), 
+        DOMAIN = col_skip(), `SITE_+/-7_AA` = col_skip(), 
+        LT_LIT = col_skip(), MS_LIT = col_skip(), 
+        MS_CST = col_skip(), `CST_CAT#` = col_skip()), 
+    trim_ws = TRUE)
+human_universe_data<-reshape::rename(human_universe_data,c(ACC_ID="ACC#"))
+# Select human proteins
+human_universe_data <- subset(human_universe_data, ORGANISM == "human")
+# Remove all information related to isoforms
+human_universe_data <- subset(human_universe_data, !grepl("-",`ACC#`))
+human_universe_data <- subset(human_universe_data, !grepl(" iso[0-9]",`PROTEIN`))
+# Select targets with pS or pT
+human_universe_data<-subset(human_universe_data,(substr(MOD_RSD,1,1)=="S"|substr(MOD_RSD,1,1)=="T"))
+# format the MOD_RSD column and group by gene/protein/uniprot
+human_universe_data <- human_universe_data %>% mutate(MOD_RSD=substr(MOD_RSD,1,nchar(MOD_RSD)-2)) 
+human_universe_data <- human_universe_data %>% group_by(`ACC#`,GENE,PROTEIN) %>% summarise_at("MOD_RSD",function(x){paste(substr(x,2,2000), collapse=",")})
+# Generate the psite column, with the vectors containing psites (for the contingency table analysis)
+human_universe_data <- as.data.frame(human_universe_data)
+human_universe_data$psite <- lapply(human_universe_data$MOD_RSD, function(x){ return(as.numeric(strsplit(x,",")[[1]]))})
+
+# merge the tables and mark CDK1 targets and non CDK1 targets. Only by ACC, protein names in human data are still with  the isoform nomenclature
+human_data <- merge.data.frame(x = human_data,y = human_universe_data,by = c("ACC#"),all = T,suffixes = c("_CDK1","_ALL"))
+#remove PROTEIN and GENE comumns from x, and rename the y columns
+human_data$GENE_CDK1<-NULL
+human_data$PROTEIN_CDK1<-NULL
+human_data <- reshape::rename(human_data,c(PROTEIN_ALL="PROTEIN",GENE_ALL="GENE"))
+# Adding the target category "Non Cdk1 target"
+levels(human_data$target) <- c("Cdk1 target","Non Cdk1 target")
+human_data$target[is.na(human_data$target)]<-"Non Cdk1 target"
+
+human_data<-merge.data.frame(human_data,humanDiso_full,by.x = "ACC#",by.y = "acc")
+
+
+#__________________________________________
+# addition of human MAPK,AURK,PLK,NEK,DYRK
+
+mapk_data <- read_delim("phosphorylation_data/phosphositePlus_data/MAPK/PSP_MAPK_Target_HS.tab", 
+    "\t", escape_double = FALSE, col_types = cols(MAPK_MOD_RSD = col_character()), 
+    trim_ws = TRUE)
+
+mapk_data$psite_MAPK <- lapply(mapk_data$MAPK_MOD_RSD, function(x){ return(as.numeric(strsplit(x,",")[[1]]))})
+
+human_data<-merge.data.frame(human_data, mapk_data, by = c("GENE","PROTEIN","ACC#"),all.x = T)
+
+human_data <- human_data %>% mutate(target_mapk=case_when(
+    !is.na(MAPK_MOD_RSD) ~ "mapk target",
+    TRUE ~ "Non mapk target"
+))
+
+aurk_data <- read_delim("phosphorylation_data/phosphositePlus_data/AURK/PSP-Gerber_data_curated_cleaned.tab", 
+    "\t", escape_double = FALSE, col_types = cols(AURK_MOD_RSD = col_character()), 
+    trim_ws = TRUE)
+
+aurk_data$psite_aurk <- lapply(aurk_data$AURK_MOD_RSD, function(x){ return(as.numeric(strsplit(x,",")[[1]]))})
+
+human_data<-merge.data.frame(human_data, aurk_data, by = c("ACC#"),all.x = T)
+
+human_data <- human_data %>% mutate(target_aurk=case_when(
+    !is.na(AURK_MOD_RSD) ~ "aurk target",
+    TRUE ~ "Non aurk target"
+))
+
+plk_data <- read_delim("phosphorylation_data/phosphositePlus_data/PLK//PSP-Gerber_data_curated_cleaned.tab", 
+    "\t", escape_double = FALSE, col_types = cols(PLK_MOD_RSD = col_character()), 
+    trim_ws = TRUE)
+
+plk_data$psite_plk <- lapply(plk_data$PLK_MOD_RSD, function(x){ return(as.numeric(strsplit(x,",")[[1]]))})
+
+human_data<-merge.data.frame(human_data, plk_data, by = c("ACC#"),all.x = T)
+
+human_data <- human_data %>% mutate(target_plk=case_when(
+    !is.na(PLK_MOD_RSD) ~ "plk target",
+    TRUE ~ "Non plk target"
+))
+
+nek_data <- read_delim("phosphorylation_data/phosphositePlus_data/NEK/PSP_NEK_Target_HS.tab", 
+    "\t", escape_double = FALSE, col_types = cols(NEK_MOD_RSD = col_character()), 
+    trim_ws = TRUE)
+
+nek_data$psite_nek <- lapply(nek_data$NEK_MOD_RSD, function(x){ return(as.numeric(strsplit(x,",")[[1]]))})
+
+human_data<-merge.data.frame(human_data, nek_data, by = c("ACC#"),all.x = T)
+
+human_data <- human_data %>% mutate(target_nek=case_when(
+    !is.na(NEK_MOD_RSD) ~ "nek target",
+    TRUE ~ "Non nek target"
+))
+
+dyrk_data <- read_delim("phosphorylation_data/phosphositePlus_data/DYRK/PSP_DYRK_Target_HS.tab", 
+    "\t", escape_double = FALSE, col_types = cols(DYRK_MOD_RSD = col_character()), 
+    trim_ws = TRUE)
+
+dyrk_data$psite_dyrk <- lapply(dyrk_data$DYRK_MOD_RSD, function(x){ return(as.numeric(strsplit(x,",")[[1]]))})
+
+human_data<-merge.data.frame(human_data, dyrk_data, by = c("ACC#"),all.x = T)
+
+human_data <- human_data %>% mutate(target_dyrk=case_when(
+    !is.na(DYRK_MOD_RSD) ~ "dyrk target",
+    TRUE ~ "Non dyrk target"
+))
+#__________________________________________
+
+
+
+
+#Xenopus
+## ___________Phosphosite Xenopus Data_____________
+
+xenopus_data <- read_delim("phosphorylation_data/Barrantes_data/all_phosphosites_xenopus_nr.tab", "\t", escape_double = FALSE, col_types = cols(`Leading proteins` = col_skip(), Protein = col_skip()), trim_ws = TRUE)
+
+xenopus_data <- xenopus_data %>% dplyr::rename(ID=Proteins,psites=`Positions within proteins`,seqWindow=`Sequence window`,UID=`Unique identifier`) %>% group_by(ID) %>% summarise_at(c("psites","seqWindow","UID"),function(x){paste(x, collapse=",")})
+
+xenopus_ANOVA_data <- read_delim("phosphorylation_data/Barrantes_data/Xen_phospho_AnovaPhosphosites_curated.txt","\t", escape_double = FALSE, trim_ws = TRUE)
+
+xenopus_data <- merge.data.frame(xenopus_data,xenopusDiso,by = "ID")
+
+clusterA <- read_lines(file = "phosphorylation_data/Barrantes_data/ids/xenopusclusterA_mpi.txt")
+clusterB <- read_lines(file = "phosphorylation_data/Barrantes_data/ids/xenopusclusterB_mpi.txt")
+clusterC <- read_lines(file = "phosphorylation_data/Barrantes_data/ids/xenopusclusterC_mpi.txt")
+clusterD <- read_lines(file = "phosphorylation_data/Barrantes_data/ids/xenopusclusterD_mpi.txt")
+humanCDKtargets <- read_lines(file = "phosphorylation_data/Barrantes_data/ids/humanCDKtargets_mpi.txt")
+
+xenopus_data <- xenopus_data %>% mutate(cluster_A=case_when(
+    ID %in% clusterA ~ TRUE,
+    TRUE ~ FALSE
+))
+xenopus_data <- xenopus_data %>% mutate(cluster_B=case_when(
+    ID %in% clusterB ~ TRUE,
+    TRUE ~ FALSE
+))
+xenopus_data <- xenopus_data %>% mutate(cluster_C=case_when(
+    ID %in% clusterC ~ TRUE,
+    TRUE ~ FALSE
+))
+xenopus_data <- xenopus_data %>% mutate(cluster_D=case_when(
+    ID %in% clusterD ~ TRUE,
+    TRUE ~ FALSE
+))
+
+xenopus_data <- xenopus_data %>% mutate(ANOVA=case_when(
+    ID %in% clusterD ~ TRUE,
+    TRUE ~ FALSE
+))
+
+xenopus_data <- xenopus_data %>% mutate(ANOVA=case_when(
+    (cluster_A | cluster_B | cluster_C | cluster_D) ~ "Dynamic",
+    TRUE ~ "Non Dynamic"
+))
+
+xenopus_data <- xenopus_data %>% mutate(hCDKtarget=case_when(
+    ID %in% humanCDKtargets ~ TRUE,
+    TRUE ~ FALSE
+))
+
+xenopus_data$psites <- lapply(xenopus_data$psites, function(x){ return(as.numeric(strsplit(x,",")[[1]]))})
+xenopus_data$UID <- lapply(xenopus_data$UID, function(x){ return(as.character(strsplit(x,",")[[1]]))})
+xenopus_data$anova_psites <- apply(xenopus_data, 1, function(x){x$psites[x$UID %in% xenopus_ANOVA_data$UID]})
+
+```
+
+
+
+#Fig. 3e
+
+## Yeast datasets intersection
+```{r Holt disorder percentage,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=7}
+# I should think how to define the universe: universe all proteins in holt in ubersax and CDK1 target only the ones that both techniques discovers a valid???
+
+##### Violion Plot version###########
+yeastIntersect_disoPerc_cols_idx <-grep("_perc",colnames(yeastIntersect_All_data))
+yeastIntersect_reshaped_disoPerc <- melt(yeastIntersect_All_data[,yeastIntersect_disoPerc_cols_idx])
+colnames(yeastIntersect_reshaped_disoPerc) <- c("Predictor","Percentage of disorder")
+yeastIntersect_reshaped_disoPerc$target <- rep(yeastIntersect_All_data$target_intersect,length(yeastIntersect_disoPerc_cols_idx))
+yeastIntersect_reshaped_disoPerc$target<- relevel(as.factor(yeastIntersect_reshaped_disoPerc$target),ref="Non Cdk1 target")
+yeastIntersect_reshaped_disoPerc$Predictor <- factor(as.character(yeastIntersect_reshaped_disoPerc$Predictor),levels =  c("pfilt_perc","seg_perc","dis465_perc","disHL_perc","espD_perc","espN_perc","espX_perc","glo_perc","iupl_perc","iups_perc","jronn_perc","vsl_perc","spot_perc"))
+
+ggplot(yeastIntersect_reshaped_disoPerc,aes(x=Predictor, y=`Percentage of disorder`)) +
+    geom_violin(aes(fill=target),position=position_dodge(0.9),bw=7,alpha=1,trim = F) +
+    geom_boxplot(aes(fill=target),position=position_dodge(0.9),width=0.10,outlier.size = 0.0001) +
+ggpubr::theme_classic2() +
+theme(
+  text = element_text(size=20),
+  legend.position = "none",legend.title = element_blank(),
+  axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed"),axis.text.x =element_text(angle=45, hjust = 1)
+  ) +
+scale_y_continuous(limits = c(-20, 135), breaks = c(seq(0, 100, by = 20))) +
+scale_x_discrete(labels = c("Pfilt", "SEG","DisEMBL-465","DisEMBL-HotLoops","ESpritz-DisProt","ESpritz-NMR","ESpritz-Xray","GlobPlot","IUPred-Long","IUPred-Short","JRONN","VSL2b","SPOT")) + xlab(NULL) +
+scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
+scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE)
+
+# Main Figure 4E
+yeastIntersect_reshaped_disoPerc_figure <-  subset(yeastIntersect_reshaped_disoPerc,(Predictor=="iupl_perc")|(Predictor=="vsl_perc")|(Predictor=="spot_perc"))
+
+yeastIntersect_reshaped_disoPerc_figure$Predictor <- 
+  factor(yeastIntersect_reshaped_disoPerc_figure$Predictor, c("iupl_perc","spot_perc","vsl_perc"))
+
+ggplot(yeastIntersect_reshaped_disoPerc_figure,aes(x=Predictor, y=`Percentage of disorder`)) +
+geom_violin(aes(fill=target,color=target),position=position_dodge(0.9),bw=10,alpha=1,trim = F) +
+geom_boxplot(aes(color=target),position=position_dodge(0.9),width=0.4,outlier.size = 0.0001) +
+ggpubr::theme_classic2() +
+theme(text = element_text(size=20),legend.position = "bottom",legend.title = element_blank(),axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed")) +
+scale_y_continuous(limits = c(-20, 135), breaks = c(seq(0, 100, by = 20))) +
+scale_x_discrete(labels = c("IUPred", "SPOT","VSL2b")) + xlab(NULL) +
+geom_segment(aes(x = 0.75, y = 133, xend = 1.25, yend = 133)) + annotate(geom="text", x=1, y=135, label="***") +
+geom_segment(aes(x = 1.75, y = 133, xend = 2.25, yend = 133)) + annotate(geom="text", x=2, y=135, label="***") +
+geom_segment(aes(x = 2.75, y = 133, xend = 3.25, yend = 133)) + annotate(geom="text", x=3, y=135, label="***") +
+scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
+scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE)
+
+
+yeastIntersect_reshaped_disoPerc_figure$target <- relevel(yeastIntersect_reshaped_disoPerc_figure$target,ref="Cdk1 target")
+wilcox.test(`Percentage of disorder`~target,data=yeastIntersect_reshaped_disoPerc_figure,subset = Predictor=="iupl_perc",conf.int=TRUE)
+wilcox.test(`Percentage of disorder`~target,data=yeastIntersect_reshaped_disoPerc_figure,subset = Predictor=="spot_perc",conf.int=TRUE)
+wilcox.test(`Percentage of disorder`~target,data=yeastIntersect_reshaped_disoPerc_figure,subset = Predictor=="vsl_perc",conf.int=TRUE)
+
+
+####################################
+```
+
+## Human
+```{r human disorder percentage,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=7}
+
+human_reshaped_disoPerc_figure <-  subset(human_reshaped_disoPerc,(Predictor=="iupl_perc")|(Predictor=="vsl_perc")|(Predictor=="spot_perc"))
+
+human_reshaped_disoPerc_figure$Predictor <- 
+  factor(human_reshaped_disoPerc_figure$Predictor, c("iupl_perc","spot_perc","vsl_perc"))
+
+ggplot(human_reshaped_disoPerc_figure,aes(x=Predictor, y=`Percentage of disorder`)) +
+geom_violin(aes(fill=target),position=position_dodge(0.9),bw=10,alpha=1,trim = F) +
+geom_boxplot(aes(color=target),position=position_dodge(0.9),width=0.4,outlier.shape = NA) +
+ggpubr::theme_classic2() +
+theme(text = element_text(size=20),legend.position = "bottom",legend.title = element_blank(),axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed")) +
+scale_y_continuous(limits = c(-20, 135), breaks = c(seq(0, 100, by = 20))) +
+scale_x_discrete(labels = c("IUPred", "SPOT","VSL2b")) + xlab(NULL) +
+geom_segment(aes(x = 0.75, y = 133, xend = 1.25, yend = 133)) + annotate(geom="text", x=1, y=135, label="***") +
+geom_segment(aes(x = 1.75, y = 133, xend = 2.25, yend = 133)) + annotate(geom="text", x=2, y=135, label="***") +
+geom_segment(aes(x = 2.75, y = 133, xend = 3.25, yend = 133)) + annotate(geom="text", x=3, y=135, label="***") +
+scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
+scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE)
+
+human_reshaped_disoPerc_figure$target <- relevel(human_reshaped_disoPerc_figure$target,ref="Cdk1 target")
+wilcox.test(`Percentage of disorder`~target,data=human_reshaped_disoPerc_figure,subset = Predictor=="iupl_perc",conf.int=TRUE)
+wilcox.test(`Percentage of disorder`~target,data=human_reshaped_disoPerc_figure,subset = Predictor=="spot_perc",conf.int=TRUE)
+wilcox.test(`Percentage of disorder`~target,data=human_reshaped_disoPerc_figure,subset = Predictor=="vsl_perc",conf.int=TRUE)
+```
+
+### Xenopus  
+```{r xenopus disorder percentage,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=7}
+
+##### Violion Plot version###########
+xenopus_disoPerc_cols_idx <-grep("_perc",colnames(xenopus_data))
+xenopus_reshaped_disoPerc <- melt(xenopus_data[,xenopus_disoPerc_cols_idx])
+colnames(xenopus_reshaped_disoPerc) <- c("Predictor","Percentage of disorder")
+xenopus_reshaped_disoPerc$ANOVA <- rep(xenopus_data$ANOVA,length(xenopus_disoPerc_cols_idx))
+xenopus_reshaped_disoPerc$ANOVA<- relevel(as.factor(xenopus_reshaped_disoPerc$ANOVA),ref="Non Dynamic")
+xenopus_reshaped_disoPerc$hCDKtarget <- rep(xenopus_data$hCDKtarget,length(xenopus_disoPerc_cols_idx))
+xenopus_reshaped_disoPerc <- xenopus_reshaped_disoPerc %>% mutate(hCDKtarget=case_when(
+    hCDKtarget  ~ "Human CDK target",
+    TRUE ~ "Other"
+))
+xenopus_reshaped_disoPerc$Predictor <- factor(xenopus_reshaped_disoPerc$Predictor,levels = ordered(levels(xenopus_reshaped_disoPerc$Predictor)))
+
+# ggplot(xenopus_reshaped_disoPerc,aes(x=Predictor, y=`Percentage of disorder`)) +
+#     geom_violin(aes(fill=cluster),position=position_dodge(0.9),bw=5,alpha=0.5,trim = F) +
+#     geom_boxplot(aes(fill=cluster),position=position_dodge(0.9),width=0.05,outlier.size = 0.0001) +
+#     ggpubr::theme_pubclean() + 
+#     theme(text = element_text(size=20),axis.text.x = element_text(angle=45),legend.position = "none") + 
+#     scale_y_continuous(limits = c(-20, 120), breaks = c(seq(0, 100, by = 10)))
+
+# Main Figure 4E
+xenopus_reshaped_disoPerc_figure <-  subset(xenopus_reshaped_disoPerc,(Predictor=="iupl_perc")|(Predictor=="vsl_perc")|(Predictor=="spot_perc"))
+
+xenopus_reshaped_disoPerc_figure$Predictor <- 
+  factor(xenopus_reshaped_disoPerc_figure$Predictor, c("iupl_perc","spot_perc","vsl_perc"))
+
+ggplot(xenopus_reshaped_disoPerc_figure,aes(x=Predictor, y=`Percentage of disorder`)) +
+geom_violin(aes(fill=ANOVA,color=ANOVA),position=position_dodge(0.9),bw=10,alpha=1,trim = F) +
+geom_boxplot(aes(color=ANOVA),position=position_dodge(0.9),width=0.4,outlier.size = 0.0001) +
+ggpubr::theme_classic2() +
+theme(text = element_text(size=20),legend.position = "bottom",legend.title = element_blank(),axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed")) +
+scale_y_continuous(limits = c(-20, 135), breaks = c(seq(0, 100, by = 20))) +
+scale_x_discrete(labels = c("IUPred", "SPOT","VSL2b")) + xlab(NULL) +
+geom_segment(aes(x = 0.75, y = 133, xend = 1.25, yend = 133)) + annotate(geom="text", x=1, y=135, label="***") +
+geom_segment(aes(x = 1.75, y = 133, xend = 2.25, yend = 133)) + annotate(geom="text", x=2, y=135, label="***") +
+geom_segment(aes(x = 2.75, y = 133, xend = 3.25, yend = 133)) + annotate(geom="text", x=3, y=135, label="***") +
+scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
+scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE)
+
+xenopus_reshaped_disoPerc$ANOVA<- relevel(xenopus_reshaped_disoPerc$ANOVA,ref="Dynamic")
+wilcox.test(`Percentage of disorder`~ANOVA,data=xenopus_reshaped_disoPerc_figure,subset = Predictor=="iupl_perc",conf.int=TRUE)
+wilcox.test(`Percentage of disorder`~ANOVA,data=xenopus_reshaped_disoPerc_figure,subset = Predictor=="spot_perc",conf.int=TRUE)
+wilcox.test(`Percentage of disorder`~ANOVA,data=xenopus_reshaped_disoPerc_figure,subset = Predictor=="vsl_perc",conf.int=TRUE)
+
+```
+
+
+#Fig. 3f
+## Violin plots for the disorder percentage in all kinases' targets for the three main predictors used in this paper
+```{r disorder percentages for other kinases,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=15}
+
+#This data is available only for Human
+
+phosphoProteome_human_disoPerc <- subset(human_data,target=="Non Cdk1 target" &
+                                         target_mapk=="Non mapk target" &
+                                         target_aurk=="Non aurk target" &
+                                         target_plk=="Non plk target" &
+                                         target_nek=="Non nek target" &
+                                         target_dyrk=="Non dyrk target")[,c("iupl_perc","spot_perc","vsl_perc")]
+human_disoPerc_data <- cbind(phosphoProteome_human_disoPerc,subset=rep("Phosphoproteome",nrow(phosphoProteome_human_disoPerc)))
+
+cdk_human_disoPerc <- subset(human_data,target=="Cdk1 target")[,c("iupl_perc","spot_perc","vsl_perc")]
+human_disoPerc_data <- rbind(human_disoPerc_data,cbind(cdk_human_disoPerc,subset=rep("CDK",nrow(cdk_human_disoPerc))))
+
+mapk_human_disoPerc <- subset(human_data,target_mapk=="mapk target")[,c("iupl_perc","spot_perc","vsl_perc")]
+human_disoPerc_data <- rbind(human_disoPerc_data,cbind(mapk_human_disoPerc,subset=rep("MAPK",nrow(mapk_human_disoPerc))))
+
+aurk_human_disoPerc <- subset(human_data,target_aurk=="aurk target")[,c("iupl_perc","spot_perc","vsl_perc")]
+human_disoPerc_data <- rbind(human_disoPerc_data,cbind(aurk_human_disoPerc,subset=rep("AURK",nrow(aurk_human_disoPerc))))
+
+plk_human_disoPerc <- subset(human_data,target_plk=="plk target")[,c("iupl_perc","spot_perc","vsl_perc")]
+human_disoPerc_data <- rbind(human_disoPerc_data,cbind(plk_human_disoPerc,subset=rep("PLK",nrow(plk_human_disoPerc))))
+
+nek_human_disoPerc <- subset(human_data,target_nek=="nek target")[,c("iupl_perc","spot_perc","vsl_perc")]
+human_disoPerc_data <- rbind(human_disoPerc_data,cbind(nek_human_disoPerc,subset=rep("NEK",nrow(nek_human_disoPerc))))
+
+dyrk_human_disoPerc <- subset(human_data,target_dyrk=="dyrk target")[,c("iupl_perc","spot_perc","vsl_perc")]
+human_disoPerc_data <- rbind(human_disoPerc_data,cbind(dyrk_human_disoPerc,subset=rep("DYRK",nrow(dyrk_human_disoPerc))))
+
+human_disoPerc_data$subset <- forcats::as_factor(human_disoPerc_data$subset)
+
+human_disoPerc_data <- melt(human_disoPerc_data,id.vars = "subset",variable.name = "Predictor",value.name = "Percentage of disorder")
+
+
+
+ggplot(human_disoPerc_data,aes(x=Predictor, y=`Percentage of disorder`)) +
+geom_violin(aes(fill=subset),position=position_dodge(0.8),trim = F,adjust = 1) +
+geom_boxplot(aes(color=subset),position=position_dodge(0.8),width=0.15,outlier.shape = NA) +
+ggpubr::theme_classic2() +
+theme(text = element_text(size=20),legend.position = "bottom",legend.title = element_blank(),axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed")) +
+scale_y_continuous(limits = c(-20, 135), breaks = c(seq(0, 100, by = 20))) +
+scale_x_discrete(labels = c("IUPred", "SPOT","VSL2b")) + xlab(NULL) +
+scale_fill_manual(values = c("#ffdd15ff",pal_tron()(7)[c(3,4,1,2,5,6)])) + guides(fill = guide_legend(nrow = 1)) +
+scale_color_manual(values = c("#ffdd15ff",pal_tron()(7)[c(3,4,1,2,5,6)]),guide=FALSE)
+```
+
+## Post-hoc test hypothesis fir all possible comparisons
+
+```{r post-hoc test for all kinases disorder percentage,echo=FALSE,message=FALSE,warning=FALSE,fig.height=6,fig.width=22}
+
+#__________________________
+# Tests Kruskal-willis dunn post-hoc
+library(FSA)
+
+dunnnMat <- matrix(ncol = 7,nrow = 7)
+colnames(dunnnMat) <- c("Phosphoproteome","CDK","MAPK","AURK","PLK","NEK","DYRK")
+rownames(dunnnMat) <- c("Phosphoproteome","CDK","MAPK","AURK","PLK","NEK","DYRK")
+#---------------------Helper functions---------------------------
+# Get lower triangle of the correlation matrix
+  get_lower_tri<-function(cormat){
+    cormat[upper.tri(cormat)] <- NA
+    return(cormat)
+  }
+  # Get upper triangle of the correlation matrix
+  get_upper_tri <- function(cormat){
+    cormat[lower.tri(cormat)]<- NA
+    return(cormat)
+  }
+
+reorder_mat <- function(cormat){
+# Use correlation between variables as distance
+dd <- as.dist((1-cormat)/2)
+hc <- hclust(dd)
+cormat <-cormat[hc$order, hc$order]
+}
+
+#--------------------------------------------------------------
+
+#IUPred
+Summarize(`Percentage of disorder` ~ subset,
+data=subset(human_disoPerc_data,Predictor=="iupl_perc"),
+digits=3)
+iupl_model=lm(`Percentage of disorder` ~ subset,
+data=subset(human_disoPerc_data,Predictor=="iupl_perc"))
+kruskal.test(`Percentage of disorder` ~ subset, data = subset(human_disoPerc_data,Predictor=="iupl_perc"))
+iupl_PT = dunnTest(`Percentage of disorder` ~ subset, data = subset(human_disoPerc_data,Predictor=="iupl_perc"),method="bh")
+iupl_PT_res <- iupl_PT$res
+iupl_dunnnMat <- dunnnMat
+for (n in 1:nrow(iupl_PT_res)) {
+  comp_vec <- str_split(iupl_PT_res[n,"Comparison"],pattern = " - ")[[1]]
+  iupl_dunnnMat[comp_vec[1],comp_vec[2]] <- iupl_PT_res[n,"P.adj"]
+  iupl_dunnnMat[comp_vec[2],comp_vec[1]] <- iupl_PT_res[n,"P.adj"]
+}
+iupl_dunnnMat[is.na(iupl_dunnnMat)] <- 1
+
+
+# iupl_dunnnMat_ord <- reorder_mat(iupl_dunnnMat)
+iupl_upper_tri <- get_upper_tri(iupl_dunnnMat)
+# Melt the correlation matrix
+melted_iupl_dunnnMat <- melt(iupl_upper_tri, na.rm = TRUE)
+melted_iupl_dunnnMat$value_log <- -log10(melted_iupl_dunnnMat$value)
+melted_iupl_dunnnMat <- melted_iupl_dunnnMat %>% mutate(value_log=replace(value_log, value_log>10, 10)) 
+melted_iupl_dunnnMat$value<- prettyNum(melted_iupl_dunnnMat$value, format = "e", digits = 1)
+# Create a ggheatmap
+ggplot(melted_iupl_dunnnMat, aes(Var2, Var1, fill = value_log))+
+    geom_tile(color = "white")+
+    geom_text(aes(Var2, Var1, label = value), color = "white", size = 4,fontface = "bold") +
+    scale_fill_gradient(low = pal_jco()(10)[4],high = pal_jco()(10)[1], 
+                        limit = c(-log10(0.05),10), space = "Lab", 
+                        name="P-value",
+                        breaks=c(-log10(0.05),5,10),labels=c("0.05","10e-5","<10e-10")) +
+    theme_classic(base_size = 15,)+ # minimal theme
+    theme(axis.text.x = element_text(angle = 90, vjust = 1,hjust = 1),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.line = element_blank(),
+          panel.border = element_rect(colour = "black", fill=NA, size=1))+
+    coord_fixed()+
+    guides(fill = guide_colorbar(title.position = "top", title.hjust = 0.5))
+
+#SPOT
+Summarize(`Percentage of disorder` ~ subset,
+data=subset(human_disoPerc_data,Predictor=="spot_perc"),
+digits=3)
+spot_model=lm(`Percentage of disorder` ~ subset,
+data=subset(human_disoPerc_data,Predictor=="spot_perc"))
+kruskal.test(`Percentage of disorder` ~ subset, data = subset(human_disoPerc_data,Predictor=="spot_perc"))
+spot_PT = dunnTest(`Percentage of disorder` ~ subset, data = subset(human_disoPerc_data,Predictor=="spot_perc"),method="bh")
+spot_PT_res <- spot_PT$res
+spot_dunnnMat <- dunnnMat
+for (n in 1:nrow(spot_PT_res)) {
+  comp_vec <- str_split(spot_PT_res[n,"Comparison"],pattern = " - ")[[1]]
+  spot_dunnnMat[comp_vec[1],comp_vec[2]] <- spot_PT_res[n,"P.adj"]
+  spot_dunnnMat[comp_vec[2],comp_vec[1]] <- spot_PT_res[n,"P.adj"]
+}
+spot_dunnnMat[is.na(spot_dunnnMat)] <- 1
+
+
+# spot_dunnnMat_ord <- reorder_mat(spot_dunnnMat)
+spot_upper_tri <- get_upper_tri(spot_dunnnMat)
+# Melt the correlation matrix
+melted_spot_dunnnMat <- melt(spot_upper_tri, na.rm = TRUE)
+melted_spot_dunnnMat$value_log <- -log10(melted_spot_dunnnMat$value)
+melted_spot_dunnnMat <- melted_spot_dunnnMat %>% mutate(value_log=replace(value_log, value_log>10, 10)) 
+melted_spot_dunnnMat$value<- prettyNum(melted_spot_dunnnMat$value, format = "e", digits = 1)
+# Create a ggheatmap
+ggplot(melted_spot_dunnnMat, aes(Var2, Var1, fill = value_log))+
+    geom_tile(color = "white")+
+    geom_text(aes(Var2, Var1, label = value), color = "white", size = 4,fontface = "bold") +
+    scale_fill_gradient(low = pal_jco()(10)[4],high = pal_jco()(10)[1], 
+                        limit = c(-log10(0.05),10), space = "Lab", 
+                        name="P-value",
+                        breaks=c(-log10(0.05),5,10),labels=c("0.05","10e-5","<10e-10")) +
+    theme_classic(base_size = 15,)+ # minimal theme
+    theme(axis.text.x = element_text(angle = 90, vjust = 1,hjust = 1),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.line = element_blank(),
+          panel.border = element_rect(colour = "black", fill=NA, size=1))+
+    coord_fixed()+
+    guides(fill = guide_colorbar(title.position = "top", title.hjust = 0.5))
+
+#VSL2B
+Summarize(`Percentage of disorder` ~ subset,
+data=subset(human_disoPerc_data,Predictor=="vsl_perc"),
+digits=3)
+vsl_model=lm(`Percentage of disorder` ~ subset,
+data=subset(human_disoPerc_data,Predictor=="vsl_perc"))
+kruskal.test(`Percentage of disorder` ~ subset, data = subset(human_disoPerc_data,Predictor=="vsl_perc"))
+vsl_PT = dunnTest(`Percentage of disorder` ~ subset, data = subset(human_disoPerc_data,Predictor=="vsl_perc"),method="bh")
+vsl_PT_res <- vsl_PT$res
+vsl_dunnnMat <- dunnnMat
+for (n in 1:nrow(vsl_PT_res)) {
+  comp_vec <- str_split(vsl_PT_res[n,"Comparison"],pattern = " - ")[[1]]
+  vsl_dunnnMat[comp_vec[1],comp_vec[2]] <- vsl_PT_res[n,"P.adj"]
+  vsl_dunnnMat[comp_vec[2],comp_vec[1]] <- vsl_PT_res[n,"P.adj"]
+}
+vsl_dunnnMat[is.na(vsl_dunnnMat)] <- 1
+
+
+# vsl_dunnnMat_ord <- reorder_mat(vsl_dunnnMat)
+vsl_upper_tri <- get_upper_tri(vsl_dunnnMat)
+# Melt the correlation matrix
+melted_vsl_dunnnMat <- melt(vsl_upper_tri, na.rm = TRUE)
+melted_vsl_dunnnMat$value_log <- -log10(melted_vsl_dunnnMat$value)
+melted_vsl_dunnnMat <- melted_vsl_dunnnMat %>% mutate(value_log=replace(value_log, value_log>10, 10)) 
+melted_vsl_dunnnMat$value<- prettyNum(melted_vsl_dunnnMat$value, format = "e", digits = 1)
+# Create a ggheatmap
+ggplot(melted_vsl_dunnnMat, aes(Var2, Var1, fill = value_log))+
+    geom_tile(color = "white")+
+    geom_text(aes(Var2, Var1, label = value), color = "white", size = 4,fontface = "bold") +
+    scale_fill_gradient(low = pal_jco()(10)[4],high = pal_jco()(10)[1], 
+                        limit = c(-log10(0.05),10), space = "Lab", 
+                        name="P-value",
+                        breaks=c(-log10(0.05),5,10),labels=c("0.05","10e-5","<10e-10")) +
+    theme_classic(base_size = 15,)+ # minimal theme
+    theme(axis.text.x = element_text(angle = 90, vjust = 1,hjust = 1),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.line = element_blank(),
+          panel.border = element_rect(colour = "black", fill=NA, size=1))+
+    coord_fixed()+
+    guides(fill = guide_colorbar(title.position = "top", title.hjust = 0.5))
+
+
+```
+
+
+
+
+# to Change
+```{r consensus phosphosites in disorder,echo=FALSE,message=FALSE,warning=FALSE,fig.cap=""}
+# Main figure 4F
+#___Yeast Intersection USING IUPRED LONG___
+# adding number of consensus in total and in disorder
+
+yeastIntersectMinCons <- sapply(yeastIntersect_All_data$Sequence,function(x){index<-unlist(gregexpr("[ST]P",x),use.names = F)
+                                                      if (index[1]==-1) {return(0)
+                                                      } else {return(length(index))}})
+names(yeastIntersectMinCons) <- NULL 
+
+expct_yeastIntersectMinCons <- yeastIntersectMinCons*(yeastIntersect_All_data$iupl_perc/100)
+
+obsv_yeastIntersectMinCons <- sapply(yeastIntersect_All_data$iupl_disoSeq,function(x){index<-unlist(gregexpr("[ST]P",x),use.names = F)
+                                                      if (index[1]==-1) {return(0)
+                                                      } else {return(length(index))}})
+names(obsv_yeastIntersectMinCons) <- NULL 
+yeastIntersect_iupl_obsVSexp_data <- as.data.frame(cbind(expct_yeastIntersectMinCons,obsv_yeastIntersectMinCons,yeastIntersect_All_data$target_intersect))
+colnames(yeastIntersect_iupl_obsVSexp_data) <-c("expected","observed","target")
+yeastIntersect_iupl_obsVSexp_data$expected <- as.numeric(yeastIntersect_iupl_obsVSexp_data$expected)
+yeastIntersect_iupl_obsVSexp_data$observed <- as.numeric(yeastIntersect_iupl_obsVSexp_data$observed)
+
+ggplot(yeastIntersect_iupl_obsVSexp_data) + 
+  geom_point(aes(x=observed,y=expected,color=target),size=2,alpha=0.6)+
+    geom_abline(color="darkslategrey",slope = 1,size=1,linetype = "dashed")+
+    ggpubr::theme_classic2() + 
+    theme(text = element_text(size=17),legend.position = "none") + 
+    scale_x_continuous(limits = c(0, 30),breaks = c(seq(0, 30, by = 5)))+ xlab("Observed [S/T]P in IDR") +
+    scale_y_continuous(limits = c(0, 30),breaks = c(seq(0, 30, by = 5)))+ ylab("Expected [S/T]P in IDR")
+# yeastIntersectFullCons <- sapply(yeastIntersect_All_data$Sequence,function(x){index<-unlist(gregexpr("[ST]P.[KR]",x),use.names = F)
+#                                                       if (index[1]==-1) {return(0)
+#                                                       } else {return(length(index))}})
+# names(yeastIntersectFullCons) <- NULL 
+
+
+
+#___human USING IUPRED LONG___
+# adding number of consensus in total and in disorder
+
+humanMinCons <- sapply(human_data$Sequence,function(x){index<-unlist(gregexpr("[ST]P",x),use.names = F)
+                                                      if (index[1]==-1) {return(0)
+                                                      } else {return(length(index))}})
+names(humanMinCons) <- NULL 
+
+expct_humanMinCons <- humanMinCons*(human_data$iupl_perc/100)
+
+obsv_humanMinCons <- sapply(human_data$iupl_disoSeq,function(x){index<-unlist(gregexpr("[ST]P",x),use.names = F)
+                                                      if (index[1]==-1) {return(0)
+                                                      } else {return(length(index))}})
+names(obsv_humanMinCons) <- NULL 
+human_iupl_obsVSexp_data <- as.data.frame(cbind(expct_humanMinCons,obsv_humanMinCons,human_data$target))
+colnames(human_iupl_obsVSexp_data) <-c("expected","observed","target")
+human_iupl_obsVSexp_data$expected <- as.numeric(human_iupl_obsVSexp_data$expected)
+human_iupl_obsVSexp_data$observed <- as.numeric(human_iupl_obsVSexp_data$observed)
+human_iupl_obsVSexp_data$target <- as.factor(human_iupl_obsVSexp_data$target)
+
+ggplot(human_iupl_obsVSexp_data) + 
+  geom_point(aes(x=observed,y=expected,color=target),size=2,alpha=0.5)+
+    geom_abline(color="darkslategrey",slope = 1,size=1,linetype = "dashed")+
+    ggpubr::theme_classic2() + 
+    theme(text = element_text(size=17),legend.position = "none") + 
+    scale_x_continuous(limits = c(0, 30),breaks = c(seq(0, 30, by = 5)))+ xlab("Observed [S/T]P in IDR") +
+    scale_y_continuous(limits = c(0, 30),breaks = c(seq(0, 30, by = 5)))+ ylab("Expected [S/T]P in IDR")
+# humanFullCons <- sapply(human_All_data$Sequence,function(x){index<-unlist(gregexpr("[ST]P.[KR]",x),use.names = F)
+#                                                       if (index[1]==-1) {return(0)
+#                                                       } else {return(length(index))}})
+# names(humanFullCons) <- NULL 
+
+#___xenopus USING IUPRED LONG___
+# adding number of consensus in total and in disorder
+
+xenopusMinCons <- sapply(xenopus_data$Sequence,function(x){index<-unlist(gregexpr("[ST]P",x),use.names = F)
+                                                      if (index[1]==-1) {return(0)
+                                                      } else {return(length(index))}})
+names(xenopusMinCons) <- NULL 
+
+expct_xenopusMinCons <- xenopusMinCons*(xenopus_data$iupl_perc/100)
+
+obsv_xenopusMinCons <- sapply(xenopus_data$iupl_disoSeq,function(x){index<-unlist(gregexpr("[ST]P",x),use.names = F)
+                                                      if (index[1]==-1) {return(0)
+                                                      } else {return(length(index))}})
+names(obsv_xenopusMinCons) <- NULL 
+xenopus_iupl_obsVSexp_data <- as.data.frame(cbind(expct_xenopusMinCons,obsv_xenopusMinCons,xenopus_data$target))
+colnames(xenopus_iupl_obsVSexp_data) <-c("expected","observed","target")
+xenopus_iupl_obsVSexp_data$expected <- as.numeric(as.character(xenopus_iupl_obsVSexp_data$expected))
+xenopus_iupl_obsVSexp_data$observed <- as.numeric(as.character(xenopus_iupl_obsVSexp_data$observed))
+xenopus_iupl_obsVSexp_data$target <- as.factor(xenopus_iupl_obsVSexp_data$target)
+
+ggplot(xenopus_iupl_obsVSexp_data) + 
+  geom_point(aes(x=observed,y=expected,color=target),size=2,alpha=0.5)+
+    geom_abline(color="darkslategrey",slope = 1,size=1,linetype = "dashed")+
+    ggpubr::theme_classic2() + 
+    theme(text = element_text(size=17),legend.position = "none") + 
+    scale_x_continuous(limits = c(0, 30),breaks = c(seq(0, 30, by = 5)))+ xlab("Observed [S/T]P in IDR") +
+    scale_y_continuous(limits = c(0, 30),breaks = c(seq(0, 30, by = 5)))+ ylab("Expected [S/T]P in IDR")
+# xenopusFullCons <- sapply(xenopus_All_data$Sequence,function(x){index<-unlist(gregexpr("[ST]P.[KR]",x),use.names = F)
+#                                                       if (index[1]==-1) {return(0)
+#                                                       } else {return(length(index))}})
+# names(xenopusFullCons) <- NULL 
+```
+
+
+
+```{r Enrichment of Phospho Ser and Ther in IDRs ,echo=FALSE,message=FALSE,warning=FALSE}
+
+
+# Main fig 4e# Main fig 4e
+
+predictors <- c("IUPred","SPOT","VSL2b")
+
+
+
+yeastIntersect_idx_cols <- c("iupl_disoIndexes","spot_disoIndexes","vsl_disoIndexes" )
+yeastIntersect_organism <- (rep("Yeast CDK targets",length(yeastIntersect_idx_cols)))
+yeastIntersect_proteome_length <- sum(yeastDiso_full$Length)
+yeastIntersect_diso_fraction <- numeric()
+yeastIntersect_CMHpval <- numeric()
+yeastIntersect_CMHcommonOR <- numeric()
+yeastIntersect_FisherPval <- numeric()
+yeastIntersect_FisherOR <- numeric()
+yeastIntersect_FisherCI <- character()
+for (i in 1:length(yeastIntersect_idx_cols)) {
+  yeastStratContingencyArray <- getStratContingencyArray(df = subset(yeastIntersect_CDK1_data,target_intersect=="Cdk1 target"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = yeastIntersect_idx_cols[i],
+                                                    psites_col = "psite") 
+  yeastIntersect_CMHtest <- mantelhaen.test(yeastStratContingencyArray)
+  yeastIntersect_CMHpval[i]<-yeastIntersect_CMHtest$p.value
+  yeastIntersect_CMHcommonOR[i]<-yeastIntersect_CMHtest$estimate
+  
+  yeastContingency <- matrix(c(sum(yeastStratContingencyArray[1,1,]),
+                               sum(yeastStratContingencyArray[1,2,]),
+                               sum(yeastStratContingencyArray[2,1,]),
+                               sum(yeastStratContingencyArray[2,2,])),
+                             nrow = 2,byrow = T)
+  yeastIntersect_FisherTest <- fisher.test(yeastContingency)
+  yeastIntersect_FisherPval[i]<-yeastIntersect_FisherTest$p.value
+  yeastIntersect_FisherOR[i]<-yeastIntersect_FisherTest$estimate
+  yeastIntersect_FisherCI[[i]]<-paste(round(yeastIntersect_FisherTest$conf.int,4), collapse =  " - ")
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # yeastIntersect_diso_fraction[i] <-
+  #   (sum(lengths(strsplit(subset(yeastDiso_full,yeastDiso_full[, yeastIntersect_idx_cols[i]]!="0")[,yeastIntersect_idx_cols[i]],","))))/yeastIntersect_proteome_length
+  yeastIntersect_diso_fraction[i] <-
+    (sum(lengths(strsplit(subset(yeastDiso_full,!is.na(yeastDiso_full[, yeastIntersect_idx_cols[i]]))[,yeastIntersect_idx_cols[i]],","))))/yeastIntersect_proteome_length
+}
+
+human_idx_cols <- c("iupl_disoIndexes","spot_disoIndexes","vsl_disoIndexes" )
+human_organism <- (rep("Human CDK targets",length(human_idx_cols)))
+human_proteome_length <- sum(humanDiso_full$Length)
+human_diso_fraction <- numeric()
+human_CMHpval <- numeric()
+human_CMHcommonOR <- numeric()
+human_FisherPval <- numeric()
+human_FisherOR <- numeric()
+human_FisherCI <- character()
+for (i in 1:length(human_idx_cols)) {
+  humanStratContingencyArray <- getStratContingencyArray(df = subset(human_data,target=="Cdk1 target"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = human_idx_cols[i],
+                                                    psites_col = "psite_CDK1"
+                                                    ) 
+  human_CMHtest <- mantelhaen.test(humanStratContingencyArray)
+  human_CMHpval[i]<-human_CMHtest$p.value
+  human_CMHcommonOR[i]<-human_CMHtest$estimate
+  
+  humanContingency <- matrix(c(sum(humanStratContingencyArray[1,1,]),
+                               sum(humanStratContingencyArray[1,2,]),
+                               sum(humanStratContingencyArray[2,1,]),
+                               sum(humanStratContingencyArray[2,2,])),
+                             nrow = 2,byrow = T)
+  human_FisherTest <- fisher.test(humanContingency)
+  human_FisherPval[i]<-human_FisherTest$p.value
+  human_FisherOR[i]<-human_FisherTest$estimate
+  human_FisherCI[[i]]<-paste(round(human_FisherTest$conf.int,4), collapse =  " - ")
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # human_diso_fraction[i]<-(sum(lengths(strsplit(subset(humanDiso_full,humanDiso_full[,human_idx_cols[i]]!="0")[,human_idx_cols[i]],","))))/human_proteome_length
+  human_diso_fraction[i]<-(sum(lengths(strsplit(subset(humanDiso_full,!is.na(humanDiso_full[,human_idx_cols[i]]))[,human_idx_cols[i]],","))))/human_proteome_length
+
+}
+
+#__________________________________________
+#TEST addition of human MAPK and AURK
+human_mapk_organism <- (rep("Human MAPK targets",length(human_idx_cols)))
+human_mapk_CMHpval <- numeric()
+human_mapk_CMHcommonOR <- numeric()
+human_mapk_FisherPval <- numeric()
+human_mapk_FisherOR <- numeric()
+human_mapk_FisherCI <- character()
+for (i in 1:length(human_idx_cols)) {
+  humanStratContingencyArray <- getStratContingencyArray(df = subset(human_data,target_mapk=="mapk target"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = human_idx_cols[i],
+                                                    psites_col = "psite_MAPK"
+                                                    ) 
+  human_mapk_CMHtest <- mantelhaen.test(humanStratContingencyArray)
+  human_mapk_CMHpval[i]<-human_mapk_CMHtest$p.value
+  human_mapk_CMHcommonOR[i]<-human_mapk_CMHtest$estimate
+  
+  humanContingency <- matrix(c(sum(humanStratContingencyArray[1,1,]),
+                               sum(humanStratContingencyArray[1,2,]),
+                               sum(humanStratContingencyArray[2,1,]),
+                               sum(humanStratContingencyArray[2,2,])),
+                             nrow = 2,byrow = T)
+  human_mapk_FisherTest <- fisher.test(humanContingency)
+  human_mapk_FisherPval[i]<-human_mapk_FisherTest$p.value
+  human_mapk_FisherOR[i]<-human_mapk_FisherTest$estimate
+  human_mapk_FisherCI[[i]]<-paste(round(human_mapk_FisherTest$conf.int,4), collapse =  " - ")
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # human_diso_fraction[i]<-(sum(lengths(strsplit(subset(humanDiso_full,humanDiso_full[,human_idx_cols[i]]!="0")[,human_idx_cols[i]],","))))/human_proteome_length
+
+}
+
+human_aurk_organism <- (rep("Human AURK targets",length(human_idx_cols)))
+human_aurk_CMHpval <- numeric()
+human_aurk_CMHcommonOR <- numeric()
+human_aurk_FisherPval <- numeric()
+human_aurk_FisherOR <- numeric()
+human_aurk_FisherCI <- character()
+for (i in 1:length(human_idx_cols)) {
+  humanStratContingencyArray <- getStratContingencyArray(df = subset(human_data,target_aurk=="aurk target"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = human_idx_cols[i],
+                                                    psites_col = "psite_aurk"
+                                                    ) 
+  human_aurk_CMHtest <- mantelhaen.test(humanStratContingencyArray)
+  human_aurk_CMHpval[i]<-human_aurk_CMHtest$p.value
+  human_aurk_CMHcommonOR[i]<-human_aurk_CMHtest$estimate
+  
+  humanContingency <- matrix(c(sum(humanStratContingencyArray[1,1,]),
+                               sum(humanStratContingencyArray[1,2,]),
+                               sum(humanStratContingencyArray[2,1,]),
+                               sum(humanStratContingencyArray[2,2,])),
+                             nrow = 2,byrow = T)
+  human_aurk_FisherTest <- fisher.test(humanContingency)
+  human_aurk_FisherPval[i]<-human_aurk_FisherTest$p.value
+  human_aurk_FisherOR[i]<-human_aurk_FisherTest$estimate
+  human_aurk_FisherCI[[i]]<-paste(round(human_aurk_FisherTest$conf.int,4), collapse =  " - ")
+  
+  
+  
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # human_diso_fraction[i]<-(sum(lengths(strsplit(subset(humanDiso_full,humanDiso_full[,human_idx_cols[i]]!="0")[,human_idx_cols[i]],","))))/human_proteome_length
+
+}
+
+human_plk_organism <- (rep("Human PLK targets",length(human_idx_cols)))
+human_plk_CMHpval <- numeric()
+human_plk_CMHcommonOR <- numeric()
+human_plk_FisherPval <- numeric()
+human_plk_FisherOR <- numeric()
+human_plk_FisherCI <- character()
+for (i in 1:length(human_idx_cols)) {
+  humanStratContingencyArray <- getStratContingencyArray(df = subset(human_data,target_plk=="plk target"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = human_idx_cols[i],
+                                                    psites_col = "psite_plk"
+                                                    ) 
+  human_plk_CMHtest <- mantelhaen.test(humanStratContingencyArray)
+  human_plk_CMHpval[i]<-human_plk_CMHtest$p.value
+  human_plk_CMHcommonOR[i]<-human_plk_CMHtest$estimate
+  
+  humanContingency <- matrix(c(sum(humanStratContingencyArray[1,1,]),
+                               sum(humanStratContingencyArray[1,2,]),
+                               sum(humanStratContingencyArray[2,1,]),
+                               sum(humanStratContingencyArray[2,2,])),
+                             nrow = 2,byrow = T)
+  human_plk_FisherTest <- fisher.test(humanContingency)
+  human_plk_FisherPval[i]<-human_plk_FisherTest$p.value
+  human_plk_FisherOR[i]<-human_plk_FisherTest$estimate
+  human_plk_FisherCI[[i]]<-paste(round(human_plk_FisherTest$conf.int,4), collapse =  " - ")
+  
+  
+  
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # human_diso_fraction[i]<-(sum(lengths(strsplit(subset(humanDiso_full,humanDiso_full[,human_idx_cols[i]]!="0")[,human_idx_cols[i]],","))))/human_proteome_length
+
+}
+
+human_dyrk_organism <- (rep("Human DYRK targets",length(human_idx_cols)))
+human_dyrk_CMHpval <- numeric()
+human_dyrk_CMHcommonOR <- numeric()
+human_dyrk_FisherPval <- numeric()
+human_dyrk_FisherOR <- numeric()
+human_dyrk_FisherCI <- character()
+for (i in 1:length(human_idx_cols)) {
+  humanStratContingencyArray <- getStratContingencyArray(df = subset(human_data,target_dyrk=="dyrk target"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = human_idx_cols[i],
+                                                    psites_col = "psite_dyrk"
+                                                    ) 
+  human_dyrk_CMHtest <- mantelhaen.test(humanStratContingencyArray)
+  human_dyrk_CMHpval[i]<-human_dyrk_CMHtest$p.value
+  human_dyrk_CMHcommonOR[i]<-human_dyrk_CMHtest$estimate
+  
+  humanContingency <- matrix(c(sum(humanStratContingencyArray[1,1,]),
+                               sum(humanStratContingencyArray[1,2,]),
+                               sum(humanStratContingencyArray[2,1,]),
+                               sum(humanStratContingencyArray[2,2,])),
+                             nrow = 2,byrow = T)
+  human_dyrk_FisherTest <- fisher.test(humanContingency)
+  human_dyrk_FisherPval[i]<-human_dyrk_FisherTest$p.value
+  human_dyrk_FisherOR[i]<-human_dyrk_FisherTest$estimate
+  human_dyrk_FisherCI[[i]]<-paste(round(human_dyrk_FisherTest$conf.int,4), collapse =  " - ")
+  
+  
+  
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # human_diso_fraction[i]<-(sum(lengths(strsplit(subset(humanDiso_full,humanDiso_full[,human_idx_cols[i]]!="0")[,human_idx_cols[i]],","))))/human_proteome_length
+
+}
+
+human_nek_organism <- (rep("Human NEK targets",length(human_idx_cols)))
+human_nek_CMHpval <- numeric()
+human_nek_CMHcommonOR <- numeric()
+human_nek_FisherPval <- numeric()
+human_nek_FisherOR <- numeric()
+human_nek_FisherCI <- character()
+for (i in 1:length(human_idx_cols)) {
+  humanStratContingencyArray <- getStratContingencyArray(df = subset(human_data,target_nek=="nek target"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = human_idx_cols[i],
+                                                    psites_col = "psite_nek"
+                                                    ) 
+  human_nek_CMHtest <- mantelhaen.test(humanStratContingencyArray)
+  human_nek_CMHpval[i]<-human_nek_CMHtest$p.value
+  human_nek_CMHcommonOR[i]<-human_nek_CMHtest$estimate
+  
+  humanContingency <- matrix(c(sum(humanStratContingencyArray[1,1,]),
+                               sum(humanStratContingencyArray[1,2,]),
+                               sum(humanStratContingencyArray[2,1,]),
+                               sum(humanStratContingencyArray[2,2,])),
+                             nrow = 2,byrow = T)
+  human_nek_FisherTest <- fisher.test(humanContingency)
+  human_nek_FisherPval[i]<-human_nek_FisherTest$p.value
+  human_nek_FisherOR[i]<-human_nek_FisherTest$estimate
+  human_nek_FisherCI[[i]]<-paste(round(human_nek_FisherTest$conf.int,4), collapse =  " - ")
+  
+  
+  
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # human_diso_fraction[i]<-(sum(lengths(strsplit(subset(humanDiso_full,humanDiso_full[,human_idx_cols[i]]!="0")[,human_idx_cols[i]],","))))/human_proteome_length
+
+}
+#__________________________________________
+
+
+xenopus_idx_cols <- c("iupl_disoIndexes","spot_disoIndexes","vsl_disoIndexes" )
+xenopus_organism <- (rep("Xenopus dynamic",length(xenopus_idx_cols)))
+xenopus_proteome_length <- sum(xenopusDiso$Length)
+xenopus_diso_fraction <- numeric()
+xenopus_CMHpval <- numeric()
+xenopus_CMHcommonOR <- numeric()
+xenopus_FisherPval <- numeric()
+xenopus_FisherOR <- numeric()
+xenopus_FisherCI <- character()
+for (i in 1:length(xenopus_idx_cols)) {
+  xenopusStratContingencyArray <- getStratContingencyArray(df = subset(xenopus_data,ANOVA=="Dynamic"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = xenopus_idx_cols[i],
+                                                    psites_col = "anova_psites"
+                                                    ) 
+  xenopus_CMHtest <- mantelhaen.test(xenopusStratContingencyArray)
+  xenopus_CMHpval[i]<-xenopus_CMHtest$p.value
+  xenopus_CMHcommonOR[i]<-xenopus_CMHtest$estimate
+  
+  
+  xenopusContingency <- matrix(c(sum(xenopusStratContingencyArray[1,1,]),
+                               sum(xenopusStratContingencyArray[1,2,]),
+                               sum(xenopusStratContingencyArray[2,1,]),
+                               sum(xenopusStratContingencyArray[2,2,])),
+                             nrow = 2,byrow = T)
+  xenopus_FisherTest <- fisher.test(xenopusContingency)
+  xenopus_FisherPval[i]<-xenopus_FisherTest$p.value
+  xenopus_FisherOR[i]<-xenopus_FisherTest$estimate
+  xenopus_FisherCI[[i]]<-paste(round(xenopus_FisherTest$conf.int,4), collapse =  " - ")
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # xenopus_diso_fraction[i]<-(sum(lengths(strsplit(subset(xenopusDiso,xenopusDiso[,xenopus_idx_cols[i]]!="0")[,xenopus_idx_cols[i]],","))))/xenopus_proteome_length
+  xenopus_diso_fraction[i]<-(sum(lengths(strsplit(subset(xenopusDiso,!is.na(xenopusDiso[,xenopus_idx_cols[i]]))[,xenopus_idx_cols[i]],","))))/xenopus_proteome_length
+}
+
+
+
+#FISHER
+yeastIntersect_Fisher_data <- cbind(predictors,yeastIntersect_diso_fraction,yeastIntersect_FisherPval,yeastIntersect_FisherOR,yeastIntersect_FisherCI,yeastIntersect_organism)
+human_Fisher_data <- cbind(predictors,human_diso_fraction,human_FisherPval,human_FisherOR,human_FisherCI,human_organism)
+human_MAPK_Fisher_data <- cbind(predictors,human_diso_fraction,human_mapk_FisherPval,human_mapk_FisherOR,human_mapk_FisherCI,human_mapk_organism)
+human_AURK_Fisher_data <- cbind(predictors,human_diso_fraction,human_aurk_FisherPval,human_aurk_FisherOR,human_aurk_FisherCI,human_aurk_organism)
+human_PLK_Fisher_data <- cbind(predictors,human_diso_fraction,human_plk_FisherPval,human_plk_FisherOR,human_plk_FisherCI,human_plk_organism)
+human_NEK_Fisher_data <- cbind(predictors,human_diso_fraction,human_nek_FisherPval,human_nek_FisherOR,human_nek_FisherCI,human_nek_organism)
+human_DYRK_Fisher_data <- cbind(predictors,human_diso_fraction,human_dyrk_FisherPval,human_dyrk_FisherOR,human_dyrk_FisherCI,human_dyrk_organism)
+xenopus_Fisher_data <- cbind(predictors,xenopus_diso_fraction,xenopus_FisherPval,xenopus_FisherOR,xenopus_FisherCI,xenopus_organism)
+
+predictorsFisher_data<-as.data.frame(rbind(yeastIntersect_Fisher_data,
+                                           human_Fisher_data,
+                                           human_MAPK_Fisher_data,
+                                           human_AURK_Fisher_data,
+                                           human_PLK_Fisher_data,
+                                           human_NEK_Fisher_data,
+                                           human_DYRK_Fisher_data,
+                                           xenopus_Fisher_data))
+colnames(predictorsFisher_data) <- c("predictors","diso_fraction","pval","OR","conf.int","organism")
+predictorsFisher_data$diso_fraction <- as.numeric(as.character(predictorsFisher_data$diso_fraction))
+predictorsFisher_data$pval <- as.numeric(as.character(predictorsFisher_data$pval))
+predictorsFisher_data$OR <- as.numeric(as.character(predictorsFisher_data$OR))
+predictorsFisher_data$organism <- as.factor(predictorsFisher_data$organism)
+predictorsFisher_data$adjPval <- p.adjust(predictorsFisher_data$pval,method = "BH")
+
+
+
+
+#________________________________
+# Lollipop plots for CDK targets
+cdkLollipopPlots <- subset(predictorsFisher_data,grepl(pattern = "CDK|dynamic",organism)) %>%  
+    mutate(organism=factor(organism,c("Yeast CDK targets","Human CDK targets","Xenopus dynamic"))) %>% 
+    ggplot(aes(x=organism, y=OR)) +
+    geom_segment( aes(xend=organism, yend=0)) +
+    geom_point(aes(color=diso_fraction),size=12) +
+    theme_linedraw(base_size = 22)+
+    theme(panel.grid.major.y = element_blank())+
+    scale_y_continuous(limits = c(0,57),minor_breaks = c(0:57),breaks = seq(0,57,5),expand = c(0,0)) +
+    coord_flip() +
+    facet_wrap(~predictors,ncol=3)+
+    scale_color_gradient(low = pal_jco()(10)[1],high = pal_jco()(10)[4],limits=c(0.19,0.51),breaks=c(0.2,0.3,0.4,0.5)) +
+    xlab("")
+
+svg(filename = "../exportImages/subm2_V1/cdkLollipop.svg",width = 40,height = 3)
+cdkLollipopPlots
+dev.off()
+
+# Lollipop plots for other human kinases targets
+
+otherKinasesLollipopPlots <- subset(predictorsFisher_data,grepl(pattern = "MAPK|AURK|PLK|NEK|DYRK",organism)) %>%  
+    mutate(organism=factor(organism,c("Human DYRK targets","Human NEK targets","Human PLK targets","Human AURK targets","Human MAPK targets"))) %>% 
+    ggplot(aes(x=organism, y=OR)) +
+    geom_segment( aes(xend=organism, yend=0)) +
+    geom_point(aes(color=organism),size=12) +
+    theme_linedraw(base_size = 22)+
+    theme(panel.grid.major.y = element_blank())+
+    scale_y_continuous(limits = c(0,5),minor_breaks = c(0:5),breaks = seq(0,5,1),expand = c(0,0)) +
+    coord_flip() +
+    facet_wrap(~predictors,ncol=3)+
+    scale_color_manual(values = pal_tron()(7)[c(6,5,2,1,4,3)],guide=F)+
+    xlab("")
+
+svg(filename = "../exportImages/subm2_V1/humanKinasesLollipop.svg",width = 10,height = 3.7)
+otherKinasesLollipopPlots
+dev.off()
+
+```
+
+```{r CMH cdk1 psites vs other}
+predictors <- c("IUPred","SPOT","VSL2b")
+
+
+yeastIntersect_idx_cols <- c("iupl_disoIndexes","spot_disoIndexes","vsl_disoIndexes" )
+yeastIntersect_organism <- (rep("Yeast CDK targets",length(yeastIntersect_idx_cols)))
+yeastIntersect_proteome_length <- sum(yeastDiso_full$Length)
+yeastIntersect_diso_fraction <- numeric()
+yeastIntersect_pval <- numeric()
+yeastIntersect_commonOR <- numeric()
+for (i in 1:length(yeastIntersect_idx_cols)) {
+  yeastStratContingencyArray <- getStratContingencyArrayPsites(df = subset(yeastIntersect_CDK1_data,target_intersect=="Cdk1 target"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = yeastIntersect_idx_cols[i],
+                                                    psites_col = "site",
+                                                    cdk1_psites_col = "psite" ) 
+  yeastIntersect_CMHtest <- mantelhaen.test(yeastStratContingencyArray)
+  yeastIntersect_pval[i]<-yeastIntersect_CMHtest$p.value
+  yeastIntersect_commonOR[i]<-yeastIntersect_CMHtest$estimate
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # yeastIntersect_diso_fraction[i] <-
+  #   (sum(lengths(strsplit(subset(yeastDiso_full,yeastDiso_full[, yeastIntersect_idx_cols[i]]!="0")[,yeastIntersect_idx_cols[i]],","))))/yeastIntersect_proteome_length
+  yeastIntersect_diso_fraction[i] <-
+    (sum(lengths(strsplit(subset(yeastDiso_full,!is.na(yeastDiso_full[, yeastIntersect_idx_cols[i]]))[,yeastIntersect_idx_cols[i]],","))))/yeastIntersect_proteome_length
+}
+
+human_idx_cols <- c("iupl_disoIndexes","spot_disoIndexes","vsl_disoIndexes" )
+human_organism <- (rep("Human CDK targets",length(human_idx_cols)))
+human_proteome_length <- sum(humanDiso_full$Length)
+human_diso_fraction <- numeric()
+human_pval <- numeric()
+human_commonOR <- numeric()
+for (i in 1:length(human_idx_cols)) {
+  humanStratContingencyArray <- getStratContingencyArrayPsites(df = subset(human_data,target=="Cdk1 target"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = human_idx_cols[i],
+                                                    psites_col = "psite",
+                                                    cdk1_psites_col = "psite_CDK1") 
+  human_CMHtest <- mantelhaen.test(humanStratContingencyArray)
+  human_pval[i]<-human_CMHtest$p.value
+  human_commonOR[i]<-human_CMHtest$estimate
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # human_diso_fraction[i]<-(sum(lengths(strsplit(subset(humanDiso_full,humanDiso_full[,human_idx_cols[i]]!="0")[,human_idx_cols[i]],","))))/human_proteome_length
+  human_diso_fraction[i]<-(sum(lengths(strsplit(subset(humanDiso_full,!is.na(humanDiso_full[,human_idx_cols[i]]))[,human_idx_cols[i]],","))))/human_proteome_length
+
+}
+
+xenopus_idx_cols <- c("iupl_disoIndexes","spot_disoIndexes","vsl_disoIndexes" )
+xenopus_organism <- (rep("Xenopus dynamic",length(xenopus_idx_cols)))
+xenopus_proteome_length <- sum(xenopusDiso$Length)
+xenopus_diso_fraction <- numeric()
+xenopus_pval <- numeric()
+xenopus_commonOR <- numeric()
+for (i in 1:length(xenopus_idx_cols)) {
+  xenopusStratContingencyArray <- getStratContingencyArrayPsites(df = subset(xenopus_data,cluster!="Non Dynamic phosphorylation"),
+                                                    sequence_col = "Sequence",
+                                                    diso_index_col = xenopus_idx_cols[i],
+                                                    psites_col = "psites",
+                                                    cdk1_psites_col = "anova_psites",) 
+  xenopus_CMHtest <- mantelhaen.test(xenopusStratContingencyArray)
+  xenopus_pval[i]<-xenopus_CMHtest$p.value
+  xenopus_commonOR[i]<-xenopus_CMHtest$estimate
+  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
+  # xenopus_diso_fraction[i]<-(sum(lengths(strsplit(subset(xenopusDiso,xenopusDiso[,xenopus_idx_cols[i]]!="0")[,xenopus_idx_cols[i]],","))))/xenopus_proteome_length
+  xenopus_diso_fraction[i]<-(sum(lengths(strsplit(subset(xenopusDiso,!is.na(xenopusDiso[,xenopus_idx_cols[i]]))[,xenopus_idx_cols[i]],","))))/xenopus_proteome_length
+}
+
+yeastIntersect_CMH_data <- cbind(predictors,yeastIntersect_diso_fraction,yeastIntersect_pval,yeastIntersect_commonOR,yeastIntersect_organism)
+human_CMH_data <- cbind(predictors,human_diso_fraction,human_pval,human_commonOR,human_organism)
+xenopus_CMH_data <- cbind(predictors,xenopus_diso_fraction,xenopus_pval,xenopus_commonOR,xenopus_organism)
+
+predictorsCMH_data<-as.data.frame(rbind(yeastIntersect_CMH_data,human_CMH_data,xenopus_CMH_data))
+colnames(predictorsCMH_data) <- c("predictors","diso_fraction","pval","commonOR","organism")
+predictorsCMH_data$diso_fraction <- as.numeric(as.character(predictorsCMH_data$diso_fraction))
+predictorsCMH_data$pval <- as.numeric(as.character(predictorsCMH_data$pval))
+predictorsCMH_data$commonOR <- as.numeric(as.character(predictorsCMH_data$commonOR))
+predictorsCMH_data$organism <- as.factor(predictorsCMH_data$organism)
+
+
+ggplot(predictorsCMH_data,aes(x = log10(commonOR), y = -log10(pval),label=predictors)) + 
+    geom_point(aes(color=diso_fraction,shape=organism),size=3) + 
+    geom_hline(yintercept=-log10(0.05), linetype="dashed", color = "darkslategrey")+
+    annotate(geom = "text",label="p-value = 0.05",x=-2,y=-log10(0.05),hjust=0,vjust=-0.8,size=5)+
+    geom_vline(xintercept=log10(1), linetype="dashed", color = "darkslategrey")+
+    scale_y_continuous(limits = c(1,110)) +
+    xlim(-2, 2) +
+    geom_label_repel(size=4.5)+
+    theme_minimal(base_size = 15) +
+    # ggpubr::theme_pubclean(base_size=15,) +
+    theme(legend.position = c(0.26,0.75),legend.box.just = "center",legend.box.margin = margin(2, 2, 2, 2),
+          legend.box.background = element_rect(color="darkslategrey"),panel.grid.minor = element_blank()) +
+    scale_color_gradient(low = pal_jco()(10)[1],high = pal_jco()(10)[4],limits=c(0.19,0.51),breaks=c(0.2,0.3,0.4,0.5)) +
+    guides(position="bottom",color = guide_colourbar(title = "Disorder fraction",title.position = "top",label.position = "bottom",direction = "horizontal"),shape=guide_legend(title="Dataset"))
+```
+
+```{r venn phase sep, echo=FALSE}
+
+
+human_CDKtargets<-read_lines(file = "humanCDKtargets_uniprot.txt")
+
+clusterC<-read_lines(file = "xenopusclusterC_uniprot.txt")
+
+clusterD<-read_lines(file = "xenopusclusterD_uniprot.txt")
+
+sets <- list("Human CDK targets"=human_CDKtargets,"Cluster B"=clusterB,"Cluster D"=clusterD)
+
+eulerr_options(fills=list(fill=pal_jco()(10)[c(4,1,5)],alpha=0.8),edges=list(col=pal_jco()(10)[c(9,6,10)]))
+plot(euler(sets, shape = "ellipse"), quantities = TRUE)
+
+
+human_CDKtargets_uniprot<-read_lines(file = "humanCDKtargets_uniprot.txt")
+
+clusterA_uniprot<-unique(read_lines(file = "xenopusclusterA_uniprot.txt"))
+
+clusterB_uniprot<-unique(read_lines(file = "xenopusclusterB_uniprot.txt"))
+
+clusterC_uniprot<-read_lines(file = "xenopusclusterC_uniprot.txt")
+
+clusterD_uniprot<-read_lines(file = "xenopusclusterD_uniprot.txt")
+
+all_dynamic <- Reduce(union,list(clusterA_uniprot,clusterB_uniprot,clusterC_uniprot,clusterD_uniprot))
+
+# check  how many Human cdk targets are represented from the total
+
+sets <- list("Human CDK targets"=human_CDKtargets,"Cluster A"=clusterA,"Cluster B"=clusterB,"Cluster C"=clusterC,"Cluster D"=clusterD)
+
+eulerr_options(fills=list(fill=pal_jco()(10)[c(1,2,3,4,5)],alpha=0.8),edges=list(col=pal_jco()(10)[c(6,7,8,9,10)]))
+plot(euler(sets, shape = "ellipse"), quantities = TRUE)
+
+
+
+
+```
+
+
+# Supplemental information
+
+## Comaparing predictors
+
+This block compares the residues predicted as to be disordered across the entire proteomes of yeast and human using different disorders. A Venn diagram is generated to illustrate the overlap between different methods 
+
+```{r compare index ,echo=FALSE,message=FALSE,warning=FALSE}
+# This blocks compares the residues predicted as to be disordered across the entire proteomes of yeas and human using different disorders. A Venn diagram is generated to illustrate the overlap between different methods 
+
+# Yeast predictors
+yeastSpotIndexes_vec <- base::strsplit(yeastDiso_full$spot_disoIndexes,',')
+yeastSpotResidueIDs <- list()
+for (i in 1:nrow(yeastDiso_full)) {
+  yeastSpotResidueIDs[[i]] <- paste(yeastDiso_full$acc[[i]],yeastSpotIndexes_vec[[i]],sep = "_")
+}
+yeastSpotResidueIDs<-unlist(yeastSpotResidueIDs)
+
+yeastVslIndexes_vec <- base::strsplit(yeastDiso_full$vsl_disoIndexes,',')
+yeastVslResidueIDs <- list()
+for (i in 1:nrow(yeastDiso_full)) {
+  yeastVslResidueIDs[[i]] <- paste(yeastDiso_full$acc[[i]],yeastVslIndexes_vec[[i]],sep = "_")
+}
+yeastVslResidueIDs<-unlist(yeastVslResidueIDs)
+
+yeastIUPredIndexes_vec <- base::strsplit(yeastDiso_full$iupl_disoIndexes,',')
+yeastIUPredResidueIDs <- list()
+for (i in 1:nrow(yeastDiso_full)) {
+  yeastIUPredResidueIDs[[i]] <- paste(yeastDiso_full$acc[[i]],yeastIUPredIndexes_vec[[i]],sep = "_")
+}
+yeastIUPredResidueIDs<-unlist(yeastIUPredResidueIDs)
+
+yeast_sets <- list("IUPred"=yeastIUPredResidueIDs,"SPOT"=yeastSpotResidueIDs,"VSL2B"=yeastVslResidueIDs)
+
+eulerr_options(fills=list(fill=c("#f69220ff","#fedd10ff","#2aabe2ff"),alpha=0.6))
+plot(euler(yeast_sets, shape = "ellipse"), quantities = TRUE)
+
+
+
+# Human predictors
+
+humanSpotIndexes_vec <- base::strsplit(humanDiso_full$spot_disoIndexes,',')
+humanSpotResidueIDs <- list()
+for (i in 1:nrow(humanDiso_full)) {
+  humanSpotResidueIDs[[i]] <- paste(humanDiso_full$acc[[i]],humanSpotIndexes_vec[[i]],sep = "_")
+}
+humanSpotResidueIDs<-unlist(humanSpotResidueIDs)
+
+humanVslIndexes_vec <- base::strsplit(humanDiso_full$vsl_disoIndexes,',')
+humanVslResidueIDs <- list()
+for (i in 1:nrow(humanDiso_full)) {
+  humanVslResidueIDs[[i]] <- paste(humanDiso_full$acc[[i]],humanVslIndexes_vec[[i]],sep = "_")
+}
+humanVslResidueIDs<-unlist(humanVslResidueIDs)
+
+humanIUPredIndexes_vec <- base::strsplit(humanDiso_full$iupl_disoIndexes,',')
+humanIUPredResidueIDs <- list()
+for (i in 1:nrow(humanDiso_full)) {
+  humanIUPredResidueIDs[[i]] <- paste(humanDiso_full$acc[[i]],humanIUPredIndexes_vec[[i]],sep = "_")
+}
+humanIUPredResidueIDs<-unlist(humanIUPredResidueIDs)
+
+human_sets <- list("IUPred"=humanIUPredResidueIDs,"SPOT"=humanSpotResidueIDs,"VSL2B"=humanVslResidueIDs)
+
+eulerr_options(fills=list(fill=c("#f69220ff","#fedd10ff","#2aabe2ff"),alpha=0.6))
+plot(euler(human_sets, shape = "ellipse"), quantities = TRUE)
+
+
+
+```
+
+## Compositional bias of IDRs
+The compositional bias of IDRs is calculated with 3 different predictores for each of the organisms considered in this paper.
+
+### Yeast
+```{r yeast composition ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=10}
+##YEAST
+
+yeastSeq_all<-yeastDiso$Sequence
+names(yeastSeq_all)<-yeastDiso$acc
+yeastSeq_all<-Biostrings::AAStringSet(yeastSeq_all)
+
+yeastComp_all<-colSums(alphabetFrequency(yeastSeq_all))[1:20]/sum(colSums(alphabetFrequency(yeastSeq_all))[1:20])
+
+######################Set the rainbow color palette for yeast #####################
+colorPallete_YeastComp <- rainbow(20)
+names(colorPallete_YeastComp) <- levels(reorder(names(yeastComp_all),-yeastComp_all))
+########################################################################################
+
+plotYeastComp <- ggplot()+geom_bar(aes(x=reorder(names(yeastComp_all),-yeastComp_all), fill=reorder(names(yeastComp_all),-yeastComp_all), y=yeastComp_all),stat="identity") + scale_fill_manual(values=colorPallete_YeastComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank(),axis.ticks.y = element_blank(),axis.text.y = element_blank()) + scale_y_continuous(breaks = seq(0,0.1,0.025),limits = c(0,0.1)) + ggtitle("Proteome Composition")
+
+##Iupred##
+
+
+yeastSeqIupred_diso <- Biostrings::AAStringSet(yeastDiso_full$iupl_disoSeq)
+yeastCompIupred<-colSums(alphabetFrequency(yeastSeqIupred_diso))[1:20]/sum(colSums(alphabetFrequency(yeastSeqIupred_diso))[1:20])
+
+
+yeastIupredDiffComp <- sort((yeastCompIupred-yeastComp_all)/yeastComp_all,decreasing = T)
+
+
+plotYeastIupred_DC <- ggplot()+geom_bar(aes(x=reorder(names(yeastIupredDiffComp),-yeastIupredDiffComp), fill=reorder(names(yeastIupredDiffComp),-yeastIupredDiffComp), y=yeastIupredDiffComp),stat="identity") + scale_fill_manual(values=colorPallete_YeastComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank()) + scale_y_continuous(breaks = c(-0.8,-0.4,0,0.4,0.8),limits = c(-0.9,0.9)) + ggtitle("IUpred")
+
+
+##SPOT##
+
+yeastSeqSpot_diso <- Biostrings::AAStringSet(yeastDiso_full$spot_disoSeq)
+yeastCompSpot<-colSums(alphabetFrequency(yeastSeqSpot_diso))[1:20]/sum(colSums(alphabetFrequency(yeastSeqSpot_diso))[1:20])
+
+
+yeastSpotDiffComp <- sort((yeastCompSpot-yeastComp_all)/yeastComp_all,decreasing = T)
+
+
+plotYeastSpot_DC <- ggplot()+geom_bar(aes(x=reorder(names(yeastSpotDiffComp),-yeastSpotDiffComp), fill=reorder(names(yeastSpotDiffComp),-yeastSpotDiffComp), y=yeastSpotDiffComp),stat="identity") + scale_fill_manual(values=colorPallete_YeastComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank()) + scale_y_continuous(breaks = c(-0.8,-0.4,0,0.4,0.8),limits = c(-0.9,0.9)) + ggtitle("SPOT")
+
+
+##VSL##
+
+yeastSeqVsl_diso <- Biostrings::AAStringSet(yeastDiso_full$vsl_disoSeq)
+yeastCompVsl<-colSums(alphabetFrequency(yeastSeqVsl_diso))[1:20]/sum(colSums(alphabetFrequency(yeastSeqVsl_diso))[1:20])
+
+
+yeastVslDiffComp <- sort((yeastCompVsl-yeastComp_all)/yeastComp_all,decreasing = T)
+
+
+plotYeastVsl_DC <- ggplot()+geom_bar(aes(x=reorder(names(yeastVslDiffComp),-yeastVslDiffComp), fill=reorder(names(yeastVslDiffComp),-yeastVslDiffComp), y=yeastVslDiffComp),stat="identity") + scale_fill_manual(values=colorPallete_YeastComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank()) + scale_y_continuous(breaks = c(-0.8,-0.4,0,0.4,0.8),limits = c(-0.9,0.9)) + ggtitle("VSL2B")
+
+
+
+fig<-ggarrange(plotYeastComp,plotYeastIupred_DC,plotYeastSpot_DC,plotYeastVsl_DC,ncol = 1)
+annotate_figure(fig,left = text_grob("Comp. Disorder - Comp. Universe / Comp. Universe", rot = 90,size = 16))
+```
+### Human
+```{r human composition ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=10}
+##HUMAN
+
+humanSeq_all<-humanDiso$Sequence
+names(humanSeq_all)<-humanDiso$acc
+humanSeq_all<-Biostrings::AAStringSet(humanSeq_all)
+
+humanComp_all<-colSums(alphabetFrequency(humanSeq_all))[1:20]/sum(colSums(alphabetFrequency(humanSeq_all))[1:20])
+
+######################Set the rainbow color palette for human #####################
+colorPallete_HumanComp <- rainbow(20)
+names(colorPallete_HumanComp) <- levels(reorder(names(humanComp_all),-humanComp_all))
+########################################################################################
+
+plotHumanComp <- ggplot()+geom_bar(aes(x=reorder(names(humanComp_all),-humanComp_all), fill=reorder(names(humanComp_all),-humanComp_all), y=humanComp_all),stat="identity") + scale_fill_manual(values=colorPallete_HumanComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank(),axis.ticks.y = element_blank(),axis.text.y = element_blank()) + scale_y_continuous(breaks = seq(0,0.1,0.025),limits = c(0,0.1)) + ggtitle("Proteome Composition")
+
+##Iupred##
+
+
+humanSeqIupred_diso <- Biostrings::AAStringSet(humanDiso_full$iupl_disoSeq)
+humanCompIupred<-colSums(alphabetFrequency(humanSeqIupred_diso))[1:20]/sum(colSums(alphabetFrequency(humanSeqIupred_diso))[1:20])
+
+
+humanIupredDiffComp <- sort((humanCompIupred-humanComp_all)/humanComp_all,decreasing = T)
+
+
+plotHumanIupred_DC <- ggplot()+geom_bar(aes(x=reorder(names(humanIupredDiffComp),-humanIupredDiffComp), fill=reorder(names(humanIupredDiffComp),-humanIupredDiffComp), y=humanIupredDiffComp),stat="identity") + scale_fill_manual(values=colorPallete_HumanComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank()) + scale_y_continuous(breaks = c(-0.8,-0.4,0,0.4,0.8),limits = c(-0.9,0.9)) + ggtitle("IUpred")
+
+
+##SPOT##
+
+humanSeqSpot_diso <- Biostrings::AAStringSet(humanDiso_full$spot_disoSeq[!is.na(humanDiso_full$spot_disoSeq)])
+humanCompSpot<-colSums(alphabetFrequency(humanSeqSpot_diso))[1:20]/sum(colSums(alphabetFrequency(humanSeqSpot_diso))[1:20])
+
+
+humanSpotDiffComp <- sort((humanCompSpot-humanComp_all)/humanComp_all,decreasing = T)
+
+
+plotHumanSpot_DC <- ggplot()+geom_bar(aes(x=reorder(names(humanSpotDiffComp),-humanSpotDiffComp), fill=reorder(names(humanSpotDiffComp),-humanSpotDiffComp), y=humanSpotDiffComp),stat="identity") + scale_fill_manual(values=colorPallete_HumanComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank()) + scale_y_continuous(breaks = c(-0.8,-0.4,0,0.4,0.8),limits = c(-0.9,0.9)) + ggtitle("SPOT")
+
+
+##VSL##
+
+humanSeqVsl_diso <- Biostrings::AAStringSet(humanDiso_full$vsl_disoSeq[!is.na(humanDiso_full$vsl_disoSeq)])
+humanCompVsl<-colSums(alphabetFrequency(humanSeqVsl_diso))[1:20]/sum(colSums(alphabetFrequency(humanSeqVsl_diso))[1:20])
+
+
+humanVslDiffComp <- sort((humanCompVsl-humanComp_all)/humanComp_all,decreasing = T)
+
+
+plotHumanVsl_DC <- ggplot()+geom_bar(aes(x=reorder(names(humanVslDiffComp),-humanVslDiffComp), fill=reorder(names(humanVslDiffComp),-humanVslDiffComp), y=humanVslDiffComp),stat="identity") + scale_fill_manual(values=colorPallete_HumanComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank()) + scale_y_continuous(breaks = c(-0.8,-0.4,0,0.4,0.8),limits = c(-0.9,0.9)) + ggtitle("VSL2B")
+
+
+
+fig<-ggarrange(plotHumanComp,plotHumanIupred_DC,plotHumanSpot_DC,plotHumanVsl_DC,ncol = 1)
+annotate_figure(fig,left = text_grob("Comp. Disorder - Comp. Universe / Comp. Universe", rot = 90,size = 16))
+```
+### Xenopus
+```{r xenopus composition ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=10}
+##XENOPUS
+
+xenopusSeq_all<-xenopus_data$Sequence
+names(xenopusSeq_all)<-xenopus_data$acc
+xenopusSeq_all<-Biostrings::AAStringSet(xenopusSeq_all)
+
+xenopusComp_all<-colSums(alphabetFrequency(xenopusSeq_all))[1:20]/sum(colSums(alphabetFrequency(xenopusSeq_all))[1:20])
+
+######################Set the rainbow color palette for xenopus #####################
+colorPallete_XenopusComp <- rainbow(20)
+names(colorPallete_XenopusComp) <- levels(reorder(names(xenopusComp_all),-xenopusComp_all))
+########################################################################################
+
+plotXenopusComp <- ggplot()+geom_bar(aes(x=reorder(names(xenopusComp_all),-xenopusComp_all), fill=reorder(names(xenopusComp_all),-xenopusComp_all), y=xenopusComp_all),stat="identity") + scale_fill_manual(values=colorPallete_XenopusComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank(),axis.ticks.y = element_blank(),axis.text.y = element_blank()) + scale_y_continuous(breaks = seq(0,0.1,0.025),limits = c(0,0.1)) + ggtitle("Proteome Composition")
+
+##Iupred##
+
+
+xenopusSeqIupred_diso <- Biostrings::AAStringSet(xenopus_data$iupl_disoSeq)
+xenopusCompIupred<-colSums(alphabetFrequency(xenopusSeqIupred_diso))[1:20]/sum(colSums(alphabetFrequency(xenopusSeqIupred_diso))[1:20])
+
+
+xenopusIupredDiffComp <- sort((xenopusCompIupred-xenopusComp_all)/xenopusComp_all,decreasing = T)
+
+
+plotXenopusIupred_DC <- ggplot()+geom_bar(aes(x=reorder(names(xenopusIupredDiffComp),-xenopusIupredDiffComp), fill=reorder(names(xenopusIupredDiffComp),-xenopusIupredDiffComp), y=xenopusIupredDiffComp),stat="identity") + scale_fill_manual(values=colorPallete_XenopusComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank()) + scale_y_continuous(breaks = c(-0.8,-0.4,0,0.4,0.8),limits = c(-0.9,0.9)) + ggtitle("IUpred")
+
+
+##SPOT##
+
+xenopusSeqSpot_diso <- Biostrings::AAStringSet(xenopus_data$spot_disoSeq[!is.na(xenopus_data$spot_disoSeq)])
+xenopusCompSpot<-colSums(alphabetFrequency(xenopusSeqSpot_diso))[1:20]/sum(colSums(alphabetFrequency(xenopusSeqSpot_diso))[1:20])
+
+
+xenopusSpotDiffComp <- sort((xenopusCompSpot-xenopusComp_all)/xenopusComp_all,decreasing = T)
+
+
+plotXenopusSpot_DC <- ggplot()+geom_bar(aes(x=reorder(names(xenopusSpotDiffComp),-xenopusSpotDiffComp), fill=reorder(names(xenopusSpotDiffComp),-xenopusSpotDiffComp), y=xenopusSpotDiffComp),stat="identity") + scale_fill_manual(values=colorPallete_XenopusComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank()) + scale_y_continuous(breaks = c(-0.8,-0.4,0,0.4,0.8),limits = c(-0.9,0.9)) + ggtitle("SPOT")
+
+
+##VSL##
+
+xenopusSeqVsl_diso <- Biostrings::AAStringSet(xenopus_data$vsl_disoSeq[!is.na(xenopus_data$vsl_disoSeq)])
+xenopusCompVsl<-colSums(alphabetFrequency(xenopusSeqVsl_diso))[1:20]/sum(colSums(alphabetFrequency(xenopusSeqVsl_diso))[1:20])
+
+
+xenopusVslDiffComp <- sort((xenopusCompVsl-xenopusComp_all)/xenopusComp_all,decreasing = T)
+
+
+plotXenopusVsl_DC <- ggplot()+geom_bar(aes(x=reorder(names(xenopusVslDiffComp),-xenopusVslDiffComp), fill=reorder(names(xenopusVslDiffComp),-xenopusVslDiffComp), y=xenopusVslDiffComp),stat="identity") + scale_fill_manual(values=colorPallete_XenopusComp)+ theme_linedraw(base_size = 15) + theme(legend.position="none",axis.title.x =  element_blank(),axis.title.y =  element_blank(),panel.grid.major.x = element_blank(),panel.grid.minor.y = element_blank()) + scale_y_continuous(breaks = c(-0.8,-0.4,0,0.4,0.8),limits = c(-0.9,0.9)) + ggtitle("VSL2B")
+
+
+
+fig<-ggarrange(plotXenopusComp,plotXenopusIupred_DC,plotXenopusSpot_DC,plotXenopusVsl_DC,ncol = 1)
+annotate_figure(fig,left = text_grob("Comp. Disorder - Comp. Universe / Comp. Universe", rot = 90,size = 16))
+```
+
+
+## lala
+
+Calculate the porcentage of disorder of human CDK targets vs the rest of the phosphoproteome with all available predictors
+
+```{r human disorder percentage for all predictors ,echo=FALSE,message=FALSE,warning=FALSE}
+
+
+human_disoPerc_cols_idx <-grep("_perc",colnames(human_data))
+human_reshaped_disoPerc <- melt(human_data[,human_disoPerc_cols_idx])
+colnames(human_reshaped_disoPerc) <- c("Predictor","Percentage of disorder")
+human_reshaped_disoPerc$target <- rep(human_data$target,length(human_disoPerc_cols_idx))
+human_reshaped_disoPerc$target<- relevel(as.factor(human_reshaped_disoPerc$target),ref="Non Cdk1 target")
+human_reshaped_disoPerc$Predictor <- factor(as.character(human_reshaped_disoPerc$Predictor),levels = c("pfilt_perc","seg_perc","dis465_perc","disHL_perc","espD_perc","espN_perc","espX_perc","glo_perc","iupl_perc","iups_perc","jronn_perc","vsl_perc","spot_perc"))
+
+
+
+ggplot(human_reshaped_disoPerc,aes(x=Predictor, y=`Percentage of disorder`)) +
+    geom_violin(aes(fill=target),position=position_dodge(0.9),bw=5,alpha=1,trim = F) +
+    geom_boxplot(aes(fill=target),position=position_dodge(0.9),width=0.10,outlier.size = 0.0001) +
+ggpubr::theme_classic2() +
+theme(
+  text = element_text(size=20),
+  legend.position = "none",legend.title = element_blank(),
+  axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed"),axis.text.x =element_text(angle=45, hjust = 1)
+  ) +
+scale_y_continuous(limits = c(-20, 135), breaks = c(seq(0, 100, by = 20))) +
+scale_x_discrete(labels = c("Pfilt", "SEG","DisEMBL-465","DisEMBL-HotLoops","ESpritz-DisProt","ESpritz-NMR","ESpritz-Xray","GlobPlot","IUPred-Long","IUPred-Short","JRONN","VSL2b","SPOT")) + xlab(NULL) +
+scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
+scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE)
+```
+
