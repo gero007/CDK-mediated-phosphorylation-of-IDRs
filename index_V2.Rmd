@@ -421,7 +421,7 @@ save.image("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")}
 
 #Fig. 3b
 ## Xenopus
-```{r Expected Vs observed Phospho S/T in IDRs - xenopus}
+```{r Expected Vs observed Phospho S/T in IDRs - xenopus,eval=FALSE}
 
 
 
@@ -548,7 +548,7 @@ ggplot(all_predictions_phospho) +
 ```
 
 ## Human
-```{r Expected Vs observed Phospho S/T in IDRs - human}
+```{r Expected Vs observed Phospho S/T in IDRs - human,eval=FALSE}
 disoPath <- "disorder_data/local_predictions/IUpred_run_human/"
 file.names <- dir(disoPath, pattern =".iupred")
 ids <-unlist(strsplit(x = file.names,split = ".iupred",fixed = T))
@@ -671,7 +671,7 @@ ggplot(human_data) +
 ```
 
 #Fig. 3c
-```{r Expected vs Observed phospho S/T distribution in xenopus}
+```{r Expected vs Observed phospho S/T distribution in xenopus,eval=FALSE}
 melted_all_predictions_phospho <- all_predictions_phospho %>% melt(id.vars=c("ID","anova_sig","hCDK1target","length"),value.name = "psites_diso",measure.vars=c("psites_expct_diso","psites_obsv_diso"))
 
 
@@ -723,43 +723,40 @@ ggplot(subset(melted_all_predictions_phospho,hCDK1target == "Human CDK1 target" 
 
 # Main fig 4e# Main fig 4e
 
-predictors <- c("IUPred","SPOT","VSL2b")
-
-
-
-yeastIntersect_idx_cols <- c("iupl_disoIndexes","spot_disoIndexes","vsl_disoIndexes" )
-yeastIntersect_organism <- (rep("Yeast CDK targets",length(yeastIntersect_idx_cols)))
-yeastIntersect_proteome_length <- sum(yeastDiso_full$Length)
-yeastIntersect_diso_fraction <- numeric()
-yeastIntersect_CMHpval <- numeric()
-yeastIntersect_CMHcommonOR <- numeric()
-yeastIntersect_FisherPval <- numeric()
-yeastIntersect_FisherOR <- numeric()
-yeastIntersect_FisherCI <- character()
-for (i in 1:length(yeastIntersect_idx_cols)) {
-  yeastStratContingencyArray <- getStratContingencyArray(df = subset(yeastIntersect_CDK1_data,target_intersect=="Cdk1 target"),
-                                                    sequence_col = "Sequence",
-                                                    diso_index_col = yeastIntersect_idx_cols[i],
-                                                    psites_col = "psite") 
-  yeastIntersect_CMHtest <- mantelhaen.test(yeastStratContingencyArray)
-  yeastIntersect_CMHpval[i]<-yeastIntersect_CMHtest$p.value
-  yeastIntersect_CMHcommonOR[i]<-yeastIntersect_CMHtest$estimate
-  
-  yeastContingency <- matrix(c(sum(yeastStratContingencyArray[1,1,]),
-                               sum(yeastStratContingencyArray[1,2,]),
-                               sum(yeastStratContingencyArray[2,1,]),
-                               sum(yeastStratContingencyArray[2,2,])),
-                             nrow = 2,byrow = T)
-  yeastIntersect_FisherTest <- fisher.test(yeastContingency)
-  yeastIntersect_FisherPval[i]<-yeastIntersect_FisherTest$p.value
-  yeastIntersect_FisherOR[i]<-yeastIntersect_FisherTest$estimate
-  yeastIntersect_FisherCI[[i]]<-paste(round(yeastIntersect_FisherTest$conf.int,4), collapse =  " - ")
-  # Here I removed the proteins with zero prediction of disorder for calculating the fraction of disorder residues in the set. I should keep those and remove the NAs
-  # yeastIntersect_diso_fraction[i] <-
-  #   (sum(lengths(strsplit(subset(yeastDiso_full,yeastDiso_full[, yeastIntersect_idx_cols[i]]!="0")[,yeastIntersect_idx_cols[i]],","))))/yeastIntersect_proteome_length
-  yeastIntersect_diso_fraction[i] <-
-    (sum(lengths(strsplit(subset(yeastDiso_full,!is.na(yeastDiso_full[, yeastIntersect_idx_cols[i]]))[,yeastIntersect_idx_cols[i]],","))))/yeastIntersect_proteome_length
-}
+# predictors <- c("IUPred","SPOT","VSL2b")
+# 
+# 
+# 
+# yeastIntersect_idx_cols <- c("iupl_disoIndexes","spot_disoIndexes","vsl_disoIndexes" )
+# yeastIntersect_organism <- (rep("Yeast CDK targets",length(yeastIntersect_idx_cols)))
+# yeastIntersect_proteome_length <- sum(yeastDiso_full$Length)
+# yeastIntersect_diso_fraction <- numeric()
+# yeastIntersect_CMHpval <- numeric()
+# yeastIntersect_CMHcommonOR <- numeric()
+# yeastIntersect_FisherPval <- numeric()
+# yeastIntersect_FisherOR <- numeric()
+# yeastIntersect_FisherCI <- character()
+# for (i in 1:length(yeastIntersect_idx_cols)) {
+#   yeastStratContingencyArray <- getStratContingencyArray(df = subset(yeastIntersect_CDK1_data,target_intersect=="Cdk1 target"),
+#                                                     sequence_col = "Sequence",
+#                                                     diso_index_col = yeastIntersect_idx_cols[i],
+#                                                     psites_col = "psite") 
+#   yeastIntersect_CMHtest <- mantelhaen.test(yeastStratContingencyArray)
+#   yeastIntersect_CMHpval[i]<-yeastIntersect_CMHtest$p.value
+#   yeastIntersect_CMHcommonOR[i]<-yeastIntersect_CMHtest$estimate
+#   
+#   yeastContingency <- matrix(c(sum(yeastStratContingencyArray[1,1,]),
+#                                sum(yeastStratContingencyArray[1,2,]),
+#                                sum(yeastStratContingencyArray[2,1,]),
+#                                sum(yeastStratContingencyArray[2,2,])),
+#                              nrow = 2,byrow = T)
+#   yeastIntersect_FisherTest <- fisher.test(yeastContingency)
+#   yeastIntersect_FisherPval[i]<-yeastIntersect_FisherTest$p.value
+#   yeastIntersect_FisherOR[i]<-yeastIntersect_FisherTest$estimate
+#   yeastIntersect_FisherCI[[i]]<-paste(round(yeastIntersect_FisherTest$conf.int,4), collapse =  " - ")
+#   yeastIntersect_diso_fraction[i] <-
+#     (sum(lengths(strsplit(subset(yeastDiso_full,!is.na(yeastDiso_full[, yeastIntersect_idx_cols[i]]))[,yeastIntersect_idx_cols[i]],","))))/yeastIntersect_proteome_length
+# }
 
 human_idx_cols <- c("iupl_disoIndexes","spot_disoIndexes","vsl_disoIndexes" )
 human_organism <- (rep("Human CDK targets",length(human_idx_cols)))
