@@ -1,9 +1,10 @@
 CDK-mediated phosphoryations of IDRs
+================
 
 This repository provides the source code and data for all the analyses performed in the publication "A Cyclin dependent kinase-mediated phosphorylation switch of disordered protein condensation" (Valverde, Dubra et al., 2023)
 
-================
-J.M. Valverde & G. Dubra
+
+Authrs: J.M. Valverde & G. Dubra
 
 - [Human](#human)
 - [Fig. 3d](#fig-3d)
@@ -25,7 +26,9 @@ J.M. Valverde & G. Dubra
 - [Supp. Fig. 5d](#supp-fig-5d)
 - [Supp. Fig. 5e](#supp-fig-5e)
 
-\#Fig. 3b \## Xenopus
+\#Fig. 3b
+
+\## Xenopus
 
 ``` r
 all_protein_id_phospho <- read_lines("phosphorylation_data/Valverde_data/ids/xenopus_allphosphosites_mpi.txt")
