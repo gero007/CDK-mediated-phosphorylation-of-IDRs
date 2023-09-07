@@ -3,14 +3,15 @@
 
 getStratContingencyArray <- function(df,sequence_col,diso_index_col,psites_col){
   
-  indexST <- gregexpr("(S|T)",df[,sequence_col])
+  df <- as.data.frame(df)
+  indexST <- gregexpr("(S|T)",df[[sequence_col]])
   
   stratContingencyArray <- array(dim = c(2,2,nrow(df)))
   for (i in 1:nrow(df)) {
     
     
-    indexDiso <- as.numeric(strsplit(df[i,diso_index_col],",")[[1]])
-    indexPhosphoST <- df[i,psites_col][[1]]
+    indexDiso <- as.numeric(base::strsplit(df[[diso_index_col]][i],",")[[1]])
+    indexPhosphoST <- df[[psites_col]][[i]]
     indexNonPhosphoST <- setdiff(as.numeric(indexST[[i]]),indexPhosphoST)
     
     ndp <- length(which(indexPhosphoST %in% indexDiso))
