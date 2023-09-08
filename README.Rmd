@@ -630,7 +630,7 @@ rm(human_data_dt)
 
 ### c
 
-#### 
+ 
 
 ```{r Expected vs Observed phospho S/T distribution in xenopus,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5}
 melted_all_predictions_phospho <- all_predictions_phospho %>% melt(id.vars=c("ID","anova_sig","hCDK1target","length"),value.name = "psites_diso",measure.vars=c("psites_expct_diso","psites_obsv_diso"))
@@ -648,7 +648,7 @@ ggplot(melted_all_predictions_phospho) +
   scale_x_discrete(labels = c("Expected","Observed")) + xlab(element_blank()) +
   scale_y_continuous(limits = c(0, 31),breaks = c(seq(0, 30, by = 2)),expand = c(0.05,0.05))+ ylab("Phospho S/T in IDR") + 
   scale_colour_manual(values = pal_jco()(10)[c(7,10)]) +
-  scale_fill_manual(values = pal_jco()(10)[c(2,5)])
+  scale_fill_manual(values = pal_jco()(10)[c(2,5)]) + ggtitle("All \n phosphoproteins")
 
 # ANOVA +
 wilcox.test(psites_diso~variable,data=subset(melted_all_predictions_phospho,anova_sig == "Dynamic"),paired=T,estimate =T,conf.int=T)
@@ -661,7 +661,7 @@ ggplot(subset(melted_all_predictions_phospho,anova_sig == "Dynamic")) +
   scale_x_discrete(labels = c("Expected","Observed")) + xlab(element_blank()) +
   scale_y_continuous(limits = c(0, 31),breaks = c(seq(0, 30, by = 2)),expand = c(0.05,0.05))+ ylab("Phospho S/T in IDR") + 
   scale_colour_manual(values = pal_jco()(10)[c(7,10)]) +
-  scale_fill_manual(values = pal_jco()(10)[c(2,5)])
+  scale_fill_manual(values = pal_jco()(10)[c(2,5)]) + ggtitle("Dynamic")
 
 # HumanCDK targets in Dynamic
 wilcox.test(psites_diso~variable,data=subset(melted_all_predictions_phospho,anova_sig == "Dynamic" & hCDK1target == "Human CDK1 target"),paired=T,estimate =T,conf.int=T)
@@ -674,10 +674,10 @@ ggplot(subset(melted_all_predictions_phospho,hCDK1target == "Human CDK1 target" 
   scale_x_discrete(labels = c("Expected","Observed")) + xlab(element_blank()) +
   scale_y_continuous(limits = c(0, 31),breaks = c(seq(0, 30, by = 2)),expand = c(0.05,0.05))+ ylab("Phospho S/T in IDR") + 
   scale_colour_manual(values = pal_jco()(10)[c(7,10)]) +
-  scale_fill_manual(values = pal_jco()(10)[c(2,5)])
+  scale_fill_manual(values = pal_jco()(10)[c(2,5)])+ ggtitle("Dynamic and \n Human CDK target") 
 ```
 
-###d
+### d
 
 ```{r Enrichment of Phospho Ser and Ther in IDRs ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=3,fig.width=20}
 
@@ -1587,7 +1587,7 @@ subset(predictorsFisher_data,grepl(pattern = "MAPK|AURK|PLK|NEK|DYRK",organism))
 
 ### e
 
-Calculate the porcentage of disorder of human CDK targets vs the rest of the phosphoproteome with all available predictors
+Calculate the porcentage of disorder of yeast and human CDK targets vs the rest of the phosphoproteome with all available predictors
 
 ```{r human disorder percentage for all predictors ,echo=FALSE,message=FALSE,warning=FALSE,,fig.height=5,fig.width=15}
 
@@ -1604,7 +1604,7 @@ theme(
 scale_y_continuous(limits = c(-20, 135), breaks = c(seq(0, 100, by = 20))) +
 scale_x_discrete(labels = c("Pfilt", "SEG","DisEMBL-465","DisEMBL-HotLoops","ESpritz-DisProt","ESpritz-NMR","ESpritz-Xray","GlobPlot","IUPred-Long","IUPred-Short","JRONN","VSL2b","SPOT")) + xlab(NULL) +
 scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
-scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE)
+scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE) + ggtitle("Yeast")
 
 human_disoPerc_cols_idx <-grep("_perc",colnames(human_data))
 human_reshaped_disoPerc <- melt(human_data[,human_disoPerc_cols_idx])
@@ -1627,7 +1627,7 @@ theme(
 scale_y_continuous(limits = c(-20, 135), breaks = c(seq(0, 100, by = 20))) +
 scale_x_discrete(labels = c("Pfilt", "SEG","DisEMBL-465","DisEMBL-HotLoops","ESpritz-DisProt","ESpritz-NMR","ESpritz-Xray","GlobPlot","IUPred-Long","IUPred-Short","JRONN","VSL2b","SPOT")) + xlab(NULL) +
 scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
-scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE)
+scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE) ggtitle("Human")
 ```
 
 ```{r juandisotes entire function, eval=FALSE,,echo=FALSE,message=FALSE,warning=FALSE}
