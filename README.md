@@ -1,6 +1,14 @@
-CDK-mediated phosphoryations of IDRs
+CDK-mediated phosphorylations of IDRs
 ================
 J.M. Valverde & G. Dubra
+
+This repository provides the source code and data for all the analyses
+performed in the publication “A Cyclin-dependent kinase-mediated
+phosphorylation switch of disordered protein condensation” (Valverde,
+Dubra et al., 2023). This current GitHub readme file was automatically
+generated, using R Studio, from an R markdown (README.Rmd) where all the
+code used in the paper is recompiled.
+
 
 - [Main figures](#main-figures)
   - [Fig. 3](#fig-3)
@@ -15,12 +23,6 @@ J.M. Valverde & G. Dubra
     - [d](#d)
     - [e](#e-1)
 
-This repository provides the source code and data for all the analyses
-performed in the publication “A Cyclin dependent kinase-mediated
-phosphorylation switch of disordered protein condensation” (Valverde,
-Dubra et al., 2023). This current GitHub readme file was automaticaly
-generated, using R Studio, from a R markdown (README.Rmd) where all the
-code used in the paper is recompiled.
 
 # Main figures
 
