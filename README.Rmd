@@ -37,6 +37,7 @@ library(ggsci)
 library(scales)
 library(data.table)
 library(reshape2)
+library(frapplot)
 
 if (file.exists("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")) {
   load("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")
@@ -1312,6 +1313,232 @@ ggplot(melted_vsl_dunnnMat, aes(Var2, Var1, fill = value_log))+
 
 ```
 
+## Fig. 4
+
+### a
+
+```{r CDK targets and Dynamic phosphoproteins in MLOs,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=10}
+# 
+redundant_MLO_lilaDB <-  read_delim("MLOs_data/MLO_lilaDB_redundant_20052021.tab", "\t", escape_double = FALSE, trim_ws = TRUE)
+# 
+MLO_lilaDB_nr <- redundant_MLO_lilaDB %>% group_by(`ACC#`) %>% summarise_at("body",function(x){paste(unique(x),collapse = ",")})
+# 
+# 
+# 
+dynamic_symbol_to_HsUniprot <- read_delim("phosphorylation_data/Valverde_data/ids/dynamic_symbol_to_HsUniprot.tab", "\t", escape_double = FALSE, trim_ws = TRUE)
+# 
+MLO_lilaDB_nr <- MLO_lilaDB_nr %>% mutate(xenopus=case_when(
+    `ACC#` %in% dynamic_symbol_to_HsUniprot$`Human Uniprot` ~ "Dynamic",
+    TRUE ~ "Non Dynamic"
+))
+
+cdkTargets_uniprot <- read_lines("phosphorylation_data/Valverde_data/ids/humanCDKtargets_uniprot.txt",skip = 1)
+MLO_lilaDB_nr <- MLO_lilaDB_nr %>% mutate(human=case_when(
+  `ACC#` %in% cdkTargets_uniprot ~ "Cdk target",
+  TRUE ~ "Non Cdk target"
+))
+
+MLO_lilaDB_nr_curated <- read_delim("MLOs_data/MLO_lilaDB_nr_260521_curated.tab", "\t", escape_double = FALSE, trim_ws = TRUE)
+
+humanCDKtarget_MLOS <- subset(MLO_lilaDB_nr_curated, human=="Cdk target")
+humanCDKtarget_MLOS$dominant_body <- as.factor(humanCDKtarget_MLOS$dominant_body)
+
+xenopusDynamic_MLOS <- subset(MLO_lilaDB_nr_curated, xenopus=="Dynamic" )
+xenopusDynamic_MLOS$dominant_body <- as.factor(xenopusDynamic_MLOS$dominant_body)
+
+#_____________ barplots for MLOS _______________
+
+
+dynamic_symbol_to_HsUniprot <- read_delim("phosphorylation_data/Valverde_data/ids/dynamic_symbol_to_HsUniprot.tab",delim = "\t", escape_double = FALSE, trim_ws = TRUE)
+
+xenopusDynamic_MLOS <- merge(dynamic_symbol_to_HsUniprot,xenopusDynamic_MLOS,by.x = "Human Uniprot",by.y = "ACC#",all.x = T)
+xenopusDynamic_MLOS$dominant_body <- as.character(xenopusDynamic_MLOS$dominant_body)
+xenopusDynamic_MLOS$dominant_body[is.na(xenopusDynamic_MLOS$dominant_body)] <- "Not assigned"
+
+xenopus_mlo_count <- as.data.frame(table(xenopusDynamic_MLOS$dominant_body))
+colnames(xenopus_mlo_count)[1] <- "MLO"
+
+humanCdkTargets <- read_delim("phosphorylation_data/phosphositePlus_data/human_data_curated_V2_cleaned.tab","\t", escape_double = FALSE, col_types = cols(MOD_RSD = col_character()), trim_ws = TRUE)
+
+humanCDKtarget_MLOS <- merge(humanCdkTargets,humanCDKtarget_MLOS,by.x = "ACC#",by.y = "ACC#",all.x = T)
+
+humanCDKtarget_MLOS$dominant_body <- as.character(humanCDKtarget_MLOS$dominant_body)
+humanCDKtarget_MLOS$dominant_body[is.na(humanCDKtarget_MLOS$dominant_body)] <- "Not assigned"
+
+human_mlo_count <- as.data.frame(table(humanCDKtarget_MLOS$dominant_body))
+colnames(human_mlo_count)[1] <- "MLO"
+
+
+intersection_MLOS <- merge(xenopusDynamic_MLOS,humanCDKtarget_MLOS,by.x ="Human Uniprot" ,by.y = "ACC#")
+
+intersection_mlo_count <- as.data.frame(table(intersection_MLOS$dominant_body.x))
+colnames(intersection_mlo_count)[1] <- "MLO"
+
+
+
+plot_table <- as.data.frame(rbind(xenopus_mlo_count,human_mlo_count,intersection_mlo_count))
+
+plot_table$MLO <- factor(plot_table$MLO,levels = c("Not assigned","P-bodies","PML bodies","Cajal bodies","53BP1 bodies","Superenhancers-Mediator","NPC","Speckles","Stress granules","Nucleoli"))
+plot_table$dataset <- factor(c(rep("Xenopus",10),rep("Human",10),rep("Intersection",9)),levels=c("Human","Xenopus","Intersection"))
+
+
+ggplot(plot_table, aes(fill=MLO, y=Freq, x=dataset)) + 
+  geom_bar(position="fill", stat="identity",width = 0.5,color="black",size=0.1) + 
+  theme_classic() +
+    scale_fill_manual(values = c("white",pal_tron()(7)[c(4,1,3,2,5)],"aquamarine4","brown2","khaki2","dodgerblue3")) + coord_flip() 
+    
+```
+### b
+
+#### Human
+
+```{r IUpred scores - human ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=20}
+IupredHuman <- IUpredScoresPlotGenerator(subset(human_data, PROTEIN %in% c("coilin","NPM1","KI-67","NUP35","NUP98","53BP1","PML")),id_col = "PROTEIN",sites_col = "psite",subset_sites_col = "psite_CDK1",sequence_col = "Sequence")
+
+ for (plot in IupredHuman) {
+   print(plot)
+ }
+
+```
+
+#### Xenopus
+
+```{r IUpred scores - xenopus ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=20}
+IupredXenopus <- IUpredScoresPlotGenerator(subset(all_predictions_phospho,ID %in% c("coil","npm","ki67","nup53","nup98","tp53b")),sites_col = "psites")
+
+ for (plot in IupredXenopus) {
+   print(plot)
+ }
+
+```
+
+## Fig. 6
+
+### c
+```{r FRAP modelling ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5}
+
+#preprocessing the data
+# https://github.com/GuanqiaoDing/frapplot/blob/master/data-raw/preprocess.R
+# Generate data files from raw data
+#
+
+#load the data from bleached regions
+
+Avg_Spectrum_ROI1 <- read_delim("37/Avg_Spectrum_ROI1.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_ROI2 <- read_delim("37/Avg_Spectrum_ROI2.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+
+#load the data from unbleached regions
+
+Avg_Spectrum_UB1 <- read_delim("FRAP_data/Andres-Sanchez_data//Avg_Spectrum_UB1.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_UB2 <- read_delim("37/Avg_Spectrum_UB2.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+
+#load the data from nucleus to normalise with it later on
+Avg_Spectrum_nucleus <- read_delim("37/Avg_Spectrum_nucleus.txt", 
+     delim = "\t", escape_double = FALSE, col_names = FALSE, 
+     trim_ws = TRUE)
+
+
+#load the data from all the UB regions (unbleached)
+
+##for the final figure we removed the last 50s (because acquisition was made for 150s, we keep now from 1s to 100s) of the analysis because the cells were frequently moving in these last seconds, so we use the following code to normalise and remove the 50s last seconds:
+
+bkg_normalizing_vector <- as.numeric(Avg_Spectrum_nucleus[2:99,2][[1]])
+
+ROI_spectrum_matrix <- as.matrix(cbind(Avg_Spectrum_ROI1[2:99,2],Avg_Spectrum_ROI2[2:99,2]))
+ROI_spectrum_matrix_norm <- ROI_spectrum_matrix/bkg_normalizing_vector
+
+UB_spectrum_matrix <- as.matrix(cbind(Avg_Spectrum_UB1[2:99,2],Avg_Spectrum_UB2[2:99,2]))
+UB_spectrum_matrix_norm <- UB_spectrum_matrix/bkg_normalizing_vector
+
+
+
+
+#DATA MODELING
+#______________Model FRAP data____________________________________________
+
+frap_input <- list(ROI=ROI_spectrum_matrix_norm)#,UB=UB_spectrum_df_norm)
+time_vector <- 0:(nrow(ROI_spectrum_matrix)-2)
+frap_info<-frapprocess(frap_input,time_vector)
+
+FRAP_plotData<-as.data.frame(cbind(frap_info$time_points,frap_info$sample_means,frap_info$sample_sd))
+
+
+FRAP_plotData <- cbind(FRAP_plotData,rep("Bleached",nrow(FRAP_plotData)))
+
+colnames(FRAP_plotData) <- c("time","normalized_intensity","sd","region")
+
+#______________UnBleached data____________________________________________
+
+
+# Emulate the frapprocess processing of the data in the unbleached data
+#Normalized by the time before bleaching and remove that datapoint
+UB_spectrum_matrix_norm <- t(t(UB_spectrum_matrix_norm)/UB_spectrum_matrix_norm[1,])
+UB_spectrum_matrix_norm <- UB_spectrum_matrix_norm[-1,]
+
+# calculate sample mean and standard deviation
+UB_spectrum_means <- rowMeans(UB_spectrum_matrix_norm)
+UB_spectrum_sd <- apply(UB_spectrum_matrix_norm, 1, sd)
+
+UnBleached_data <- cbind(FRAP_plotData$time,UB_spectrum_means,UB_spectrum_sd,rep("Un-bleached",nrow(FRAP_plotData)))
+colnames(UnBleached_data) <- c("time","normalized_intensity","sd","region")
+
+plotData <- as.data.frame(rbind(FRAP_plotData,UnBleached_data))
+plotData$time <- as.numeric(plotData$time)
+plotData$normalized_intensity <- as.numeric(plotData$normalized_intensity)
+plotData$sd <- as.numeric(plotData$sd)
+
+
+
+
+
+
+#NON-LINEAR REGRESSION MODEL
+#   model: FR ~ c - a * exp(b * time)
+a <- frap_info$model[[1]]$m$getPars()[1]
+b <- frap_info$model[[1]]$m$getPars()[2]
+c <- frap_info$model[[1]]$m$getPars()[3]
+t_half <- frap_info$summary$halftime
+tau <- frap_info$summary$tau
+recov <- frap_info$summary$total_recovery
+
+
+#FINAL VERSION OF THE CODE FOR THE FIGURES OF RECOVERY CURVE
+
+
+ggplot(data=plotData,aes(x = time,y = normalized_intensity,color=region))+
+    geom_errorbar(aes(ymin=normalized_intensity-sd, ymax=normalized_intensity+sd),color="gray") +
+    geom_point() + 
+    geom_function(fun = function(time){c - a * exp(b * time)}, color="#f69220ff",linewidth=1.9,alpha=0.7) + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+    panel.background = element_blank(), axis.line = element_line(colour = "black"),
+    axis.text=element_text(size=12),
+    axis.title=element_text(size=18),
+    legend.text=element_text(size=12),
+    legend.title = element_text(size=19),
+    axis.text.x = element_text(face="bold",size=18),
+    axis.text.y = element_text(face="bold",size=18)) +
+    ylab("Normalized intensity")+ xlab("Time (s)") +
+    scale_color_manual(values = c("deepskyblue4","cyan4"))
+
+
+```
+
+### d
+
+```{r FRAP quantification ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5}
+
+
+
+```
+
 # Supplemental information
 
 ## Comparing predictors
@@ -1630,135 +1857,3 @@ scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
 scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE) ggtitle("Human")
 ```
 
-```{r juandisotes entire function, eval=FALSE,,echo=FALSE,message=FALSE,warning=FALSE}
-
-
-
-#######################################  HUMAN (Lila subset) ###############################################################
-
-#########################################################################################################################################################
-
-
-phosphoDiso_ST <- list()
-phosphoDiso_obs <- numeric()
-phosphoDiso_expct <- numeric()
-phosphoDiso_expct_prob <- numeric()
-for (i in 1:nrow(uniprot_all_predictions_phospho)) {
-  # diso_fraction <- length(all_predictions_phospho[i,"disordered"][[1]])/nchar(all_predictions_phospho[i,"sequence"])
-  # phosphoDiso_expct_uni[i] <- length(all_predictions_phospho[i,"psites"][[1]])*diso_fraction
-  # Fraction of Ser And Thr that fall in disorder region
-  TStotalIndexes <- as.numeric(gregexpr("S|T", uniprot_all_predictions_phospho[i,"sequence"])[[1]]) 
-  TSinDiso_count <- sum(TStotalIndexes %in% uniprot_all_predictions_phospho[i,"disordered"][[1]])
-  TSinDiso_fraction <- TSinDiso_count/length(TStotalIndexes)
-  phosphoDiso_ST[[i]] <- TStotalIndexes
-  phosphoDiso_expct_prob[i] <- TSinDiso_fraction
-  phosphoDiso_expct[i] <- uniprot_all_predictions_phospho[i,"psites_count"][[1]]*TSinDiso_fraction
-  phosphoDiso_obs[i] <- sum(uniprot_all_predictions_phospho[i,"psites"][[1]] %in% uniprot_all_predictions_phospho[i,"disordered"][[1]])
-}
-
-uniprot_all_predictions_phospho$ST_residues <- phosphoDiso_ST
-uniprot_all_predictions_phospho$psites_obsv_diso <- phosphoDiso_obs
-uniprot_all_predictions_phospho$psites_expct_diso <- phosphoDiso_expct
-uniprot_all_predictions_phospho$psites_expct_diso_prob <- phosphoDiso_expct_prob
-
-
-
-# only the embrios
-# uniprot_all_predictions_phospho <- subset(uniprot_all_predictions_phospho, mpi.accesion %in% c("rif1","mcm4","cdc6","elys"))
-# Non_Dynamic_embryoPsites_remapped_to_uniprot <- read_delim("utrech/db/uniprot/NonDynamic_embryoPsites_remapped_to_uniprot.tab", 
-#                                                            delim = "\t", escape_double = FALSE, 
-#                                                            trim_ws = TRUE)
-# Non_Dynamic_embryoPsites_remapped_to_uniprot$non.dynamic_uniprot.psite <- lapply(Non_Dynamic_embryoPsites_remapped_to_uniprot$non.dynamic_uniprot.psite, function(x){ return(as.numeric(strsplit(x,";")[[1]]))})
-# 
-# uniprot_all_predictions_phospho <- merge(uniprot_all_predictions_phospho,Non_Dynamic_embryoPsites_remapped_to_uniprot,by.x = "mpi.accesion", by.y = "non.dynamic_mpi.accesion" )
-# 
-# 
-# plotList <- IUpredScoresPlotGenerator(uniprot_all_predictions_phospho,id_col="ID",sites_col="non.dynamic_uniprot.psite",subset_sites_col="uniprot.psite",sequence_col="sequence")
-
-
-# embrios + extracts
-uniprot_all_predictions_phospho <- subset(uniprot_all_predictions_phospho, mpi.accesion %in% c("coil","npm","ki67","nup53","nup98","tp53b","nucl"))
-Non_Dynamic_embryoPsites_remapped_to_uniprot <- read_delim("utrech/db/uniprot/NonDynamic_extractAndEmbryoPsites_remapped_to_uniprot", 
-                                                           delim = "\t", escape_double = FALSE, 
-                                                           trim_ws = TRUE)
-Non_Dynamic_embryoPsites_remapped_to_uniprot$non.dynamic_uniprot.psite <- lapply(Non_Dynamic_embryoPsites_remapped_to_uniprot$non.dynamic_uniprot.psite, function(x){ return(as.numeric(strsplit(x,";")[[1]]))})
-
-uniprot_all_predictions_phospho <- merge(uniprot_all_predictions_phospho,Non_Dynamic_embryoPsites_remapped_to_uniprot,by.x = "mpi.accesion", by.y = "non.dynamic_mpi.accesion",all.y = T)
-
-
-plotList <- IUpredScoresPlotGenerator(uniprot_all_predictions_phospho,id_col="ID",sites_col="non.dynamic_uniprot.psite",subset_sites_col="uniprot.psite",sequence_col="sequence")
-
-
-
-# 
-# pdf("IUpredScores.pdf",width = 15,height = 3)
-#  for (plot in plotList) {
-#    print(plot)
-#  }
-# dev.off()
-
-lilaSetXenopus <- IUpredScoresPlotGenerator(subset(all_predictions_phospho,ID %in% c("coil","npm","ki67","tp53b","nup53","nup98","nucl")),sites_col = "psites")
-
-# JM_highly_phospho_mlos <- c("cndd3","dnli1","ube4b","tsc2","at2b1","rptor","caf1b","pcm1","abcf1","gemi5","cq028","tdrkh","tdrd6","ctr9","sf3b1","rbp2","armc9","chsp1","dkc1","eif3a","tacc3")
-# 
-# plotList_JM_highly_phospho_mlos <- IUpredScoresPlotGenerator(subset(all_predictions_phospho,ID %in% JM_highly_phospho_mlos))
-
-pdf("../exportImages/pdfs/suppFig5/IUpredScores_plotList_JM_highly_phospho_mlos",width = 15,height = 3)
-for (plot in plotList_JM_highly_phospho_mlos) {
-  print(plot)
-}
-dev.off()
-
-
-####################################################################################
-#######################                    YEAST             #######################
-####################################################################################
-#CDK targets are the intersection of Holt and ubersax, but the phosphoproteome is only holt since it is the only set that contain residue level information.
-
-phosphoDiso_ST <- list()
-phosphoDiso_obs <- numeric()
-phosphoDiso_expct <- numeric()
-phosphoDiso_expct_prob <- numeric()
-psites_count <- numeric()
-#I select only those entries with at least one holt site
-yeast_binomial_data <- subset(yeastIntersect_All_data, !isEmpty(site) & !is.na(site))
-
-for (i in 1:nrow(yeast_binomial_data)) {
-  TStotalIndexes <- as.numeric(gregexpr("S|T", yeast_binomial_data[i,"Sequence"])[[1]]) 
-  disoIndexes_numeric <- as.numeric(strsplit(yeast_binomial_data[i,"iupl_disoIndexes"],",")[[1]])
-  TSinDiso_count <- sum(TStotalIndexes %in% disoIndexes_numeric)
-  TSinDiso_fraction <- TSinDiso_count/length(TStotalIndexes)
-  phosphoDiso_ST[[i]] <- TStotalIndexes
-  phosphoDiso_expct_prob[i] <- TSinDiso_fraction
-  psites_count[i] <- length(yeast_binomial_data[i,"site"][[1]])
-  phosphoDiso_expct[i] <- length(yeast_binomial_data[i,"site"][[1]])*TSinDiso_fraction
-  phosphoDiso_obs[i] <- sum(yeast_binomial_data[i,"site"][[1]] %in% disoIndexes_numeric)
-}
-
-yeast_binomial_data$ST_residues <- phosphoDiso_ST
-yeast_binomial_data$psites_obsv_diso <- phosphoDiso_obs
-yeast_binomial_data$psites_expct_diso <- phosphoDiso_expct
-yeast_binomial_data$psites_expct_diso_prob <- phosphoDiso_expct_prob
-yeast_binomial_data$psites_count <- psites_count
-
-yeast_binomial_data <- as.data.table(yeast_binomial_data)
-yeast_binomial_data[,binom := purrr::pmap(.(x=psites_obsv_diso, n=psites_count, p=psites_expct_diso_prob), binom.test, alternative="greater")]
-yeast_binomial_data[,binom_p := mapply("[[", binom, "p.value", SIMPLIFY = T)]
-yeast_binomial_data[,binom_q := mapply(p.adjust, binom_p)]
-yeast_binomial_data[,binom_sig := factor(ifelse(binom_q < 0.05, ifelse(binom_q < 0.01, "1% FDR", "5% FDR"), "n.s."), levels=c("n.s.","5% FDR", "1% FDR")) ]
-
-
-
-
-ggplot(yeast_binomial_data) + 
-  geom_point(aes(x=psites_obsv_diso,y=psites_expct_diso, colour = binom_sig,shape=target_intersect),size=2,alpha=0.80)+
-  geom_abline(color="darkslategrey",slope = 1,size=0.5,linetype = "dashed")+
-  ggpubr::theme_classic2() + 
-  theme(text = element_text(size=15),legend.position = c(0.32,0.60),legend.box.just = "left",legend.box.margin = margin(2, 2, 2, 2),legend.box.background = element_rect(color="darkslategrey"),legend.title = element_text(size = 13)) +
-  guides(color=guide_legend(title="Statistical significance")) +
-  scale_x_continuous(limits = c(0, 60),breaks = c(seq(0, 60, by = 10)))+ xlab("Observed phospho S/T in IDR") +
-  scale_y_continuous(limits = c(0, 60),breaks = c(seq(0, 60, by = 10)))+ ylab("Expected phospho S/T in IDR") + 
-  scale_colour_manual(values = c(pal_jco()(10)[3],"#ffdd15ff",pal_jco()(10)[4]))+
-  scale_shape_manual(values = c(16,4,4))
-
-```

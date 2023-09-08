@@ -1,0 +1,647 @@
+Human Uniprot	Xenopus protein name	MLO
+A1KXE4	f168b	NA
+A4D1P6	wdr91	NA
+A4GXA9	eme2	NA
+A6NP61	zar1l	NA
+A8CG34	p121c	NA
+O00151	pdli1	stress granules,Stress granules
+O00267	spt5h	NA
+O00399	dctn6	Nucleoli
+O00423	emal1	NA
+O00425	if23b	Stress granules,P-bodies
+O00472	ell2	NA
+O00499	bin1	NA
+O00512	bcl9	NA
+O00571	ddx3	nucleolus, stress granules,PML bodies,nucleolus, stress granules,Stress granules,nucleolus, stress granules,Nucleoli
+O00629	ima4	Nucleoli
+O14497	ari1a	NA
+O14524	t194a	NA
+O14617	ap3d1	NA
+O14686	mll2	NA
+O14745	nhrf1	speckles,Speckles
+O14795	un13b	NA
+O14908	gipc1	NA
+O14964	hgs	NA
+O14974	mypt1	NA
+O15013	arhga	NA
+O15040	tcpr2	NA
+O15066	kif3b	Nucleoli
+O15259	nphp1	NA
+O15304	siva	NA
+O43237	dc1l2	NA
+O43310	ctif	NA
+O43395	prpf3	nucleolus, speckles, Cajal bodies,Nucleoli,nucleolus, speckles, Cajal bodies,Cajal bodies
+O43399	tpd54	NA
+O43491	41	NA
+O43583	denr	NA
+O43683	bub1	NA
+O43829	zf161	NA
+O60256	kprb	NA
+O60264	smca5	nucleolus, Mediator complex, P-bodies,Nucleoli,nucleolus, Mediator complex, P-bodies,Superenhancers-Mediator,nucleolus, Mediator complex, P-bodies,P-bodies
+O60341	kdm1a	Superenhancers-Mediator
+O60522	tdrd6	NA
+O60716	ctnd1	Stress granules,Superenhancers-Mediator
+O60832	dkc1	Stress granules,Nucleoli,Cajal bodies
+O60841	if2p	NA
+O75153	k0664	NA
+O75179	anr17	NA
+O75182	sin3b	NA
+O75351	vps4b	NA
+O75362	zn217	NA
+O75396	sc22b	NA
+O75400	pr40a	NA
+O75475	psip1	NA
+O75486	supt3	NA
+O75533	sf3b1	P-bodies, speckles,P-bodies
+O75534	csde1	Stress granules
+O75631	upk3a	NA
+O75694	nu155	NPC
+O75717	wdhd1	NA
+O75792	rnh2a	NA
+O75821	ei3gb	Stress granules
+O75822	eif3j	NA
+O75907	dgat1	Nucleoli
+O75940	spf30	speckles, Cajal bodies,Nucleoli,speckles, Cajal bodies,Speckles
+O94761	recq4	NA
+O94763	rmp	NA
+O94776	mta2	Mediator complex,Superenhancers-Mediator
+O94927	haus5	NA
+O94967	wdr47	NA
+O95049	zo3	NA
+O95155	ube4b	Speckles
+O95197	rtn3a	NA
+O95239	kif4	NA
+O95292	vapb	NA
+O95400	cd2b2	NA
+O95453	parn	Nucleoli
+O95613	pcnt	NA
+O95759	tbcd8	NA
+O95817	bag3	Stress granules
+O95819	m4k4	Stress granules
+O96028	nsd2	NA
+P01100	fos	NA
+P02545	laml3	nucleolus, stress granules,Stress granules,nucleolus, stress granules,Nucleoli
+P02686	mbp	NA
+P04075	aldoa	NA
+P04114	vita2	NA
+P05783	k118b	Nucleoli
+P05787	k2c8	nucleolus
+P06748	npm	nucleolus, PML,PML bodies,nucleolus, PML,Nucleoli
+P07814	syep	NA
+P09234	ru1c	Nucleoli
+P09884	dpola	NA
+P0C1S8	wee2a	NA
+P10398	araf	Nucleoli
+P11388	top2a	nucleolus, P-bodies,Nucleoli,nucleolus, P-bodies,P-bodies
+P11926	dcor1	NA
+P12270	tpr	nucleolus, NPC,Nucleoli,nucleolus, NPC,NPC
+P13051	ung	NA
+P13639	ef2	nucleolus
+P13807	gys1	NA
+P13861	kap2	NA
+P14625	enp1	NA
+P14921	ets1a	NA
+P15104	glna	NA
+P17643	tyrp1	NA
+P18583	son	NA
+P18615	nelfe	NA
+P18858	dnli1	NA
+P18887	xrcc1	nucleolus,Nucleoli
+P19174	plcg1	NA
+P20020	at2b1	NA
+P21333	flna	nucleolus,Nucleoli
+P23443	ks6b1	NA
+P23588	if4b	Stress granules
+P24928	rpb1	speckles
+P25054	apc	NA
+P25205	mcm3	nucleolus, replication foci, stress granules,Nucleoli
+P26641	ef1ga	Nucleoli
+P27694	rfa1	PML bodies
+P27708	pyr1	NA
+P27816	map4	stress granules,Stress granules,stress granules,Nucleoli
+P28290	ssfa2	NA
+P28482	mk01	NA
+P28715	ercc5	NA
+P29353	shc1	NA
+P29966	marcs	NA
+P30260	cdc27	NA
+P30304	mpip1	NA
+P30622	clip1	NA
+P31939	pur9	NA
+P31943	hnrh1	nucleolus, speckles,Nucleoli
+P33240	cstf2	NA
+P33981	ttk	nucleolus,Nucleoli
+P33991	mcm4	nucleolus, stress granules,Nucleoli,nucleolus, stress granules,Stress granules
+P33992	mcm5	Stress granules,Nucleoli
+P35251	rfc1	nucleolus,Nucleoli
+P35269	t2fa	Cajal bodies,Cajal bodies,Cajal bodies,Nucleoli
+P35658	nu214	NPC
+P35659	dek	Nucleoli
+P36507	mp2k1	NA
+P41225	sox3a	NA
+P41229	kdm5c	NA
+P42167	lap2b	NA
+P42695	cndd3	Nucleoli
+P42858	hd	NA
+P45974	ubp5	Stress granules
+P46013	ki67	nucleolus,Nucleoli,nucleolus,Stress granules
+P46063	recq1	Nucleoli
+P46100	atrx	NA
+P46940	iqga1	NA
+P48444	copd	NA
+P48643	tcpe	NA
+P49023	paxi	NA
+P49069	camlg	Nucleoli
+P49281	nram2	NA
+P49321	hibn	NA
+P49756	rbm25	P-bodies
+P49790	nu153	NPC,NPC
+P49792	rbp2	PML, NPC,NPC
+P49815	tsc2	NA
+P50552	vasp	Stress granules
+P50851	lrba	NA
+P51532	smca4	Nucleoli
+P51610	hcfc1	NA
+P51812	ks6a3	Stress granules,Nucleoli
+P52272	hnrpm	Nucleoli,P-bodies,PML bodies
+P52594	agfg1	NA
+P52701	msh6	NA
+P52948	nup98	nuclear pore complex,Stress granules,nuclear pore complex,NPC
+P53350	plk1	NA
+P53396	acly	NA
+P54727	rd23b	NA
+P55036	psmd4	NA
+P55196	afad	NA
+P55211	casp9	NA
+P55212	casp6	NA
+P57764	gspf	NA
+P61018	rab4b	NA
+P61978	hnrpk	stress granules, paraspeckles,Nucleoli
+P62136	pp1a	nucleolus,Nucleoli
+P62140	pp1b	nucleolus
+P62316	smd2	Nucleoli
+P62333	rs10	NA
+P62701	rs4	P-bodies
+P67809	ybox1	Stress granules
+P78317	rnf4	PML
+P78344	if4g2	stress granules,Stress granules
+P82094	tmf1	NA
+P84243	h33	NA
+P86791	ccz1	NA
+P87377	vegta	NA
+P98170	xiap	Speckles
+Q00341	vigln	NA
+Q00403	tf2b	Nucleoli
+Q00537	cdk17	NA
+Q00839	hnrpu	P-bodies,Nucleoli
+Q01167	foxk2	NA
+Q01518	cap1	Stress granules
+Q04637	if4g1	stress granules,Stress granules
+Q05086	ube3a	NA
+Q05209	ptn12	NA
+Q05519	srs11	speckles,Speckles
+Q06210	gfpt1	Stress granules,Nucleoli
+Q07157	zo1	NA
+Q07866	klc1	Stress granules
+Q08170	fmra	Stress granules
+Q08174	pcdh1	Nucleoli
+Q08357	s20a2	NA
+Q08378	goga3	NA
+Q09161	nbp1a	P-bodies
+Q09472	ep300	superenhancers, Mediator complex,Superenhancers-Mediator
+Q09666	ahnk	NA
+Q0VF96	cgnl1	NA
+Q10570	cpsf1	Superenhancers-Mediator
+Q12824	snf5	Nucleoli
+Q13098	csn1	NA
+Q13111	ca1ab	NA
+Q13112	caf1b	NA
+Q13177	pak2	NA
+Q13242	srsf9	nucleolus,Nucleoli
+Q13263	tif1b	Nucleoli
+Q13330	mta1	Mediator complex,Superenhancers-Mediator
+Q13415	orc1	NA
+Q13426	xrcc4	NA
+Q13442	hap28	Speckles
+Q13492	pica	NA
+Q13496	mtm1	NA
+Q13542	4ebp2	NA
+Q13554	kcc2b	NA
+Q13596	snx1	NA
+Q13620	cul4b	NA
+Q14137	bop1b	Nucleoli
+Q14149	morc3	NA
+Q14152	eif3a	Stress granules
+Q14181	dpoa2	NA
+Q14186	tfdp1	NA
+Q14202	zmym3	NA
+Q14203	dctn1	stress granules
+Q14204	dyhc1	Stress granules,Nucleoli
+Q14207	npat	Cajal bodies,Cajal bodies
+Q14244	map7	NA
+Q14493	slbp2	nucleolus, Cajal bodies,Cajal bodies,nucleolus, Cajal bodies,Nucleoli
+Q14566	mcm6	Nucleoli
+Q14571	itpr2	NA
+Q14643	itpr1	NA
+Q14669	tripc	NA
+Q14671	pum1	P-bodies
+Q14676	mdc1	53BP1 bodies,53BP1 bodies
+Q14680	melk	NA
+Q14694	ub10a	Stress granules
+Q147X3	naa30	NA
+Q14839	chd4	nucleolus,Superenhancers-Mediator,nucleolus,Nucleoli
+Q14966	zn638	Stress granules,Nucleoli
+Q14978	nolc1	nucleolus, stress granules, Cajal bodies,Nucleoli,nucleolus, stress granules, Cajal bodies,Cajal bodies
+Q14997	psme4	NA
+Q15003	cnd2	NA
+Q15004	paf15	NA
+Q15042	rb3gp	NA
+Q15075	eea1	NA
+Q15139	kpcd1	NA
+Q15154	pcm1	NA
+Q15276	rabe1	NA
+Q15366	pcbp2	Nucleoli
+Q15397	k0020	Nucleoli
+Q15398	dlgp5	speckles,Speckles
+Q15459	sf3a1	NA
+Q15596	ncoa2	Superenhancers-Mediator
+Q15649	znhi3	NA
+Q15714	t22d1	NA
+Q15717	elv1a	nucleolus, stress granules , P-bodies,Nucleoli,nucleolus, stress granules , P-bodies,P-bodies,nucleolus, stress granules , P-bodies,Stress granules
+Q15836	vamp3	NA
+Q16186	adm1a	NA
+Q16643	dreb	NA
+Q16658	fasc	Stress granules
+Q16875	f263	NA
+Q17RS7	gen	NA
+Q1ZZU3	swi5	NA
+Q2M296	mthsd	NA
+Q2M2I8	aak1	NA
+Q2M3G4	shrm1	NA
+Q2NKX8	erc6l	NA
+Q3YEC7	parf	NA
+Q49A88	ccd14	NA
+Q4G0J3	larp7	Nucleoli
+Q4V328	grap1	NA
+Q53EL6	pdcd4	NA
+Q53EZ4	cep55	NA
+Q53GS7	gle1	NPC,Nucleoli
+Q53H80	akir2	PML bodies
+Q53SF7	cobl1	NA
+Q56NI9	esco2	NA
+Q5J8M3	tmm85	NA
+Q5JSZ5	prc2b	NA
+Q5JVS0	habp4	Stress granules
+Q5M775	cytsb	Nucleoli
+Q5QJE6	tdif2	Nucleoli
+Q5SW96	arhb	NA
+Q5T0N5	fbp1l	NA
+Q5T200	zc3hd	NA
+Q5T4B2	gt253	Nucleoli
+Q5T5Y3	camp1	NA
+Q5TBB1	rnh2b	NA
+Q5TC82	rc3h1	Stress granules
+Q5TDH0	ddi2	NA
+Q5UIP0	rif1	53BP1 bodies,Nucleoli
+Q5VSL9	fa40a	NA
+Q5VT25	mrcka	NA
+Q5VTR2	bre1a	Nucleoli
+Q5VUA4	zn318	NA
+Q5VV41	arhgg	NA
+Q5VZ89	den4c	NA
+Q641Q2	fam21	nucleolus,Nucleoli
+Q659C4	lar1b	NA
+Q674X7	kazrn	NA
+Q68G75	lemd1	Nucleoli
+Q69YH5	cdca2	NA
+Q6AI08	heat6	NA
+Q6FI81	cpin1	NA
+Q6IMN6	capr2	NA
+Q6IN85	pp4r3	NA
+Q6MZP7	lin54	NA
+Q6NUQ4	t214a	NA
+Q6NUT3	mfs12	NA
+Q6NV74	CB055	NA
+Q6P0Q8	mast2	NA
+Q6P1L5	f117b	NA
+Q6P3V2	zo10	NA
+Q6PD62	ctr9	NA
+Q6PJP8	dcr1a	Nucleoli
+Q6PJT7	zc3he	Stress granules,Nucleoli
+Q6PL18	atad2	Stress granules
+Q6QNY0	bl1s3	NA
+Q6RW13	atrap	NA
+Q6VY07	pacs1	NA
+Q6WCQ1	mprip	NA
+Q6WKZ4	rfip1	NA
+Q6ZMS7	zn783	NA
+Q6ZRI6	CO039	NA
+Q6ZRS2	srcap	NA
+Q6ZU65	ubn2	NA
+Q70E73	raph1	NA
+Q7L590	mcm10	Nucleoli
+Q7LBC6	kdm3b	Nucleoli
+Q7Z2E3	aptx	Nucleoli
+Q7Z2Z1	ticrr	NA
+Q7Z3E5	armc9	NA
+Q7Z478	dhx29	NA
+Q7Z589	emsy	NA
+Q7Z5L2	gidrp	NA
+Q7Z6M1	rabek	NA
+Q7Z6Z7	huwe1	Nucleoli
+Q7Z7B0	flip1	NA
+Q86SE8	nupl	Nucleoli
+Q86SH2	zar1	NA
+Q86T03	tm55b	NA
+Q86TU7	setd3	NA
+Q86U42	epa2a	NA
+Q86U86	pb1	NA
+Q86UE4	lyric	NA
+Q86UE8	tlk2	NA
+Q86UK5	lbh	NA
+Q86UP2	ktn1	NA
+Q86V81	tho4b	Nucleoli
+Q86VN1	vps36	NA
+Q86W92	lipb1	Speckles
+Q86WB0	nipa	NA
+Q86XL3	ankl2	NA
+Q86XP3	ddx42	Nucleoli
+Q86YL5	CH042	NA
+Q86YP4	p66a	NA
+Q8IV36	cq028	NA
+Q8IV63	vrk3	NA
+Q8IVT2	CS021	NA
+Q8IWY9	cdan1	NA
+Q8IWZ3	ankh1	NA
+Q8IZ21	phr4b	NA
+Q8IZE3	pace1	NA
+Q8IZH2	xrn1	Stress granules,Nucleoli
+Q8N0Z6	ttc5	NA
+Q8N122	rptor	stress granules,Stress granules
+Q8N1F7	nup93	NPC
+Q8N201	int1	NA
+Q8N344	mier2	NA
+Q8N3X1	fnbp4	NA
+Q8N4C8	mink1	NA
+Q8N5C6	srbd1	NA
+Q8N5I9	CL045	NA
+Q8N5J2	fa63a	NA
+Q8N5S9	kkcc1	NA
+Q8N6L0	cc155	NA
+Q8N7R7	ccy1b	NA
+Q8N8A6	ddx51	Nucleoli
+Q8N9N8	eif1a	NA
+Q8NB91	fancb	NA
+Q8NCF5	nf2ip	NA
+Q8ND24	rn214	Stress granules
+Q8ND30	lipb2	Speckles
+Q8ND56	l14aa	P-bodies
+Q8NDC0	missl	NA
+Q8NE71	abcf1	Nucleoli
+Q8NEF9	srfb1	Nucleoli
+Q8NEM2	shcba	NA
+Q8NEV8	exph5	NA
+Q8NEY8	pphln	NA
+Q8NFH5	nup53	NPC,NPC
+Q8NFT6	dbf4b	NA
+Q8TCJ2	stt3b	NA
+Q8TD30	alat2	NA
+Q8TEQ6	gemi5	NA
+Q8TEW0	pard3	NA
+Q8TEW8	par3l	NA
+Q8TF74	wipf2	NA
+Q8WUM0	nu133	NPC,NPC
+Q8WV28	blnk	NA
+Q8WVB6	ctf18	NA
+Q8WVC0	leo1	Nucleoli
+Q8WVV4	pof1b	NA
+Q8WWM7	atx2l	Stress granules
+Q8WYL5	ssh	NA
+Q8WYP5	elys	NPC,Nucleoli,NPC,NPC
+Q8WYQ5	dgcr8	NA
+Q92547	tob1a	nucleolus, 53BP1 bodies,53BP1 bodies,nucleolus, 53BP1 bodies,Nucleoli
+Q92609	tbcd5	NA
+Q92614	my18a	NA
+Q92621	nu205	Stress granules,NPC
+Q92733	prcc	NA
+Q92734	tfg	NA
+Q92769	hda1b	NA
+Q92890	ufd1	Nucleoli
+Q92900	rent1	Stress granules,P-bodies,Superenhancers-Mediator
+Q92945	fubp2	stress granules,Stress granules
+Q93052	lpp	Stress granules
+Q969H0	pof1	NA
+Q969J3	l12r1	NA
+Q969K3	rnf34	NA
+Q96A65	exoc4	nucleolus,Nucleoli
+Q96AT1	K1143	NA
+Q96AX9	mib2	NA
+Q96B36	akts1	NA
+Q96C86	dcps	NA
+Q96C90	pp14b	NA
+Q96CS3	faf2b	NA
+Q96CT7	c124a	NA
+Q96D46	nmd3	Nucleoli
+Q96EP1	chfr	NA
+Q96EY5	f125a	NA
+Q96FJ0	stalp	NA
+Q96FT9	ift43	NA
+Q96FV9	thoc1	NA
+Q96G46	dus3l	NA
+Q96GA3	ltv1	Nucleoli
+Q96GX5	gwl	NA
+Q96HC4	pdli5	stress granules,Stress granules
+Q96HH9	gram3	NA
+Q96I25	spf45	NA
+Q96JB3	hic2	NA
+Q96JG6	cc132	NA
+Q96JJ7	tmx3	NA
+Q96JM2	zn462	Superenhancers-Mediator
+Q96K17	bt3l4	NA
+Q96K21	zfy19	NA
+Q96K31	CH076	NA
+Q96K80	zc3ha	NA
+Q96KB5	topk	NA
+Q96KG9	ntkl	Speckles
+Q96KQ7	ehmt2	NA
+Q96LT7	CI072	NA
+Q96M89	cc138	NA
+Q96M93	adad1	NA
+Q96MW1	ccd43	NA
+Q96N58	zik1	NA
+Q96N67	dock7	NA
+Q96NB3	zn830	NA
+Q96P47	agap3	NA
+Q96PK6	rbm14	Speckles,Nucleoli,PML bodies
+Q96QE3	atad5	NA
+Q96QF0	rab3i	NA
+Q96QF7	acrc	NA
+Q96QZ7	magi1	NA
+Q96R06	spag5	NA
+Q96S38	ks6c1	NA
+Q96S53	tesk2	NA
+Q96SB4	srpk1	Nucleoli
+Q96SK2	tm209	NA
+Q96ST2	iws1a	Nucleoli
+Q99541	plin2	NA
+Q99543	dnjc2	NA
+Q99590	scafb	NA
+Q99613	eif3c	NA
+Q99618	cdca3	NA
+Q99661	kif2c	nucleolus,Nucleoli
+Q99700	atx2	NA
+Q99708	com1	NA
+Q99733	np1l4	NA
+Q99741	cdc6	NA
+Q99871	haus7	Nucleoli
+Q9BQI5	sgip1	NA
+Q9BRP8	wibg	nucleolus,Nucleoli
+Q9BSV6	sen34	NA
+Q9BTF0	thum2	NA
+Q9BUB5	mknk1	NA
+Q9BUH6	CI142	NA
+Q9BVJ6	ut14a	nucleolus,Nucleoli
+Q9BVS5	tr61b	NA
+Q9BW71	hirp3	NA
+Q9BWW4	ssbp3	NA
+Q9BXB4	osb11	NA
+Q9BXF6	rfip5	NA
+Q9BXJ8	t120a	NA
+Q9BXT4	tdrd1	NA
+Q9BYG3	mk67i	nucleolus, P-bodies,P-bodies,nucleolus, P-bodies,Nucleoli
+Q9BYJ9	ythd1	NA
+Q9BZE9	aspc1	NA
+Q9BZI7	ren3b	Nucleoli
+Q9C0C9	ube2o	NA
+Q9C0E2	xpo4	NA
+Q9C0E8	lnp	NA
+Q9C0J8	wdr33	P-bodies,Nucleoli
+Q9H063	maf1	Nucleoli
+Q9H0D6	xrn2	Nucleoli
+Q9H0G5	nsrp1	NA
+Q9H1A4	apc1	NA
+Q9H1E3	nucks	nucleolus,Nucleoli
+Q9H211	cdt1	NA
+Q9H2M9	rbgpr	NA
+Q9H2P0	adnp	Superenhancers-Mediator
+Q9H307	pinin	NA
+Q9H3P7	gcp60	NA
+Q9H3U1	un45a	NA
+Q9H410	dsn1	nucleolus,Nucleoli
+Q9H5N1	rabe2	NA
+Q9H6R7	cb044	Nucleoli
+Q9H6S0	ytdc2	P-bodies
+Q9H6S1	azi2	NA
+Q9H6U6	bcas3	Nucleoli
+Q9H7D0	dock5	NA
+Q9H7E9	ch033	NA
+Q9H840	gemi7	NA
+Q9H8V3	ect2	NA
+Q9H9A6	lrc40	Nucleoli
+Q9H9Q4	nhej1	Nucleoli
+Q9HAV4	xpo5	NA
+Q9HAW4	clspn	NA
+Q9HC35	emal4	NA
+Q9HC44	gpbl1	NA
+Q9HCE0	epg5	NA
+Q9HCH5	sytl2	NA
+Q9NP79	vta1	NA
+Q9NQ55	ssf1	Nucleoli
+Q9NQ86	tri36	NA
+Q9NQC3	rtn4	NA
+Q9NQR1	set8b	NA
+Q9NQS7	inceb	Nucleoli
+Q9NQX3	geph	NA
+Q9NR09	birc6	NA
+Q9NR12	pdli7	Nucleoli
+Q9NR30	ddx21	Stress granules,P-bodies,Nucleoli,PML bodies
+Q9NRA8	4et	P-bodies
+Q9NRL2	baz1a	NA
+Q9NRY5	f1142	NA
+Q9NSB8	home2	NA
+Q9NSK0	klc4	NA
+Q9NTJ3	smc4	Stress granules,Nucleoli
+Q9NU19	tb22b	NA
+Q9NU22	mdn1	Nucleoli
+Q9NUL3	stau2	P-bodies
+Q9NVG8	tbc13	Nucleoli
+Q9NVH0	exd2	NA
+Q9NVI1	fanci	NA
+Q9NVP1	ddx18	P-bodies,Nucleoli
+Q9NVU0	rpc5	NA
+Q9NW82	wdr70	NA
+Q9NWB7	ift57	NA
+Q9NWH9	sltm	Speckles,Nucleoli
+Q9NWS0	pihd1	Nucleoli
+Q9NXE4	nsma3	NA
+Q9NXG0	cntln	NA
+Q9NXR1	nde1a	NA
+Q9NXZ2	ddx43	NA
+Q9NY74	etaa1	NA
+Q9NYB9	abi2	NA
+Q9NYP3	dons	NA
+Q9NYZ3	GTSE1	NA
+Q9NZ43	use1	NA
+Q9P219	daple	Nucleoli
+Q9P2D1	chd7	nucleolus,Superenhancers-Mediator,nucleolus,Nucleoli
+Q9P2E9	rrbp1	NA
+Q9UBB9	tfp11	NA
+Q9UBC2	ep15r	NA
+Q9UBL3	ash2l	Superenhancers-Mediator
+Q9UBP0	spast	NA
+Q9UBV2	se1l1	NA
+Q9UER7	daxx	Cajal bodies
+Q9UEY8	addg	NA
+Q9UGL1	kdm5b	NA
+Q9UGU0	tcf20	NA
+Q9UGU5	hmgx4	NA
+Q9UGV2	ndrg3	NA
+Q9UHB6	lima1	NA
+Q9UHR4	bi2l1	NA
+Q9UIF9	baz2a	NA
+Q9UJQ4	sall4	NA
+Q9UJT9	fbxl7	NA
+Q9UJU6	dbnla	NA
+Q9UKE5	tnik	NA
+Q9UKJ3	gptc8	Speckles
+Q9UKX7	nup50	NPC,NPC
+Q9UKY7	cdv3a	Nucleoli
+Q9ULD2	mtus1	Nucleoli
+Q9ULI0	atd2b	NA
+Q9ULJ8	neb1	NA
+Q9ULT8	hecd1	Nucleoli
+Q9ULU4	pkcb1	NA
+Q9ULW0	tpx2a	NA
+Q9UM13	apc10	NA
+Q9UM19	ical	NA
+Q9UN36	ndrg2	NA
+Q9UN79	sox13	NA
+Q9UN86	g3bp2	Stress granules,PML bodies
+Q9UNZ2	nsf1c	NA
+Q9UPQ0	limc1	NA
+Q9UPQ3	agap1	NA
+Q9UPT5	exoc7	NA
+Q9UQ35	srrm2	nuclear speckles
+Q9Y2F5	K0947	NA
+Q9Y2J2	e41l3	NA
+Q9Y2J8	padi2	NA
+Q9Y2T7	ybx2b	NA
+Q9Y2V2	chsp1	stress granules,Stress granules
+Q9Y2W6	tdrkh	NA
+Q9Y2Z0	sugt1	Speckles
+Q9Y320	tmx2	NA
+Q9Y3T6	r3hc1	NA
+Q9Y3X0	ccdc9	NA
+Q9Y490	tln1	NA
+Q9Y4C1	kd3ab	NA
+Q9Y4K1	aim1	NA
+Q9Y520	prc2c	stress granules,Stress granules
+Q9Y534	csdc2	NA
+Q9Y573	ipp	NA
+Q9Y5P4	c43bp	NA
+Q9Y5P8	p2r3b	NA
+Q9Y5S2	mrckb	NA
+Q9Y5Y5	pex16	NA
+Q9Y6A5	tacc3	NA
+Q9Y6D9	md1l1	NA
+Q9Y6G9	dc1l1	NA
