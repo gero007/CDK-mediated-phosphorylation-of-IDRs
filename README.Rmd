@@ -6,9 +6,7 @@ output:
     toc: TRUE
 ---
 
-This repository provides the source code and data for all the analyses performed in the publication "A Cyclin dependent kinase-mediated phosphorylation switch of disordered protein condensation" (Valverde, Dubra et al., 2023).
-This current GitHub readme file was automaticaly generated, using R Studio, from a R markdown (README.Rmd) where all the code used in the paper is recompiled.
-
+This repository provides the source code and data for all the analyses performed in the publication "A Cyclin dependent kinase-mediated phosphorylation switch of disordered protein condensation" (Valverde, Dubra et al., 2023). This current GitHub readme file was automaticaly generated, using R Studio, from a R markdown (README.Rmd) where all the code used in the paper is recompiled.
 
 ```{r setup and data loading,echo=FALSE,message=FALSE,warning=FALSE}
 
@@ -419,11 +417,11 @@ xenopus_data$anova_psites <- apply(xenopus_data, 1, function(x){x$psites[x$UID %
 save.image("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")}
 ```
 
+# Main figures
 
-#Main figures
-##Fig. 3
+## Fig. 3
 
-###b
+### b
 
 #### Xenopus
 
@@ -554,6 +552,7 @@ ggplot(all_predictions_phospho) +
 ```
 
 #### Human
+
 ```{r Expected Vs observed Phospho S/T in IDRs - human,echo=FALSE,message=FALSE,warning=FALSE}
 disoPath <- "disorder_data/local_predictions/IUpred_run_human/"
 file.names <- dir(disoPath, pattern =".iupred")
@@ -629,8 +628,11 @@ rm(human_data_dt)
 
 ```
 
-###c
-```{r Expected vs Observed phospho S/T distribution in xenopus,echo=FALSE,message=FALSE,warning=FALSE}
+### c
+
+#### 
+
+```{r Expected vs Observed phospho S/T distribution in xenopus,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5}
 melted_all_predictions_phospho <- all_predictions_phospho %>% melt(id.vars=c("ID","anova_sig","hCDK1target","length"),value.name = "psites_diso",measure.vars=c("psites_expct_diso","psites_obsv_diso"))
 
 
@@ -975,8 +977,7 @@ subset(predictorsFisher_data,grepl(pattern = "CDK|dynamic",organism)) %>%
 
 ```
 
-
-###e
+### e
 
 #### Yeast
 
@@ -1019,7 +1020,7 @@ wilcox.test(`Percentage of disorder`~target,data=yeastIntersect_reshaped_disoPer
 ####################################
 ```
 
-####Human
+#### Human
 
 ```{r human disorder percentage,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=7}
 
@@ -1054,7 +1055,7 @@ wilcox.test(`Percentage of disorder`~target,data=human_reshaped_disoPerc_figure,
 wilcox.test(`Percentage of disorder`~target,data=human_reshaped_disoPerc_figure,subset = Predictor=="vsl_perc",conf.int=TRUE)
 ```
 
-####Xenopus
+#### Xenopus
 
 ```{r xenopus disorder percentage,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=7}
 
@@ -1103,7 +1104,7 @@ wilcox.test(`Percentage of disorder`~ANOVA,data=xenopus_reshaped_disoPerc_figure
 
 ```
 
-###f
+### f
 
 ```{r disorder percentages for other kinases,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=15}
 
@@ -1311,18 +1312,13 @@ ggplot(melted_vsl_dunnnMat, aes(Var2, Var1, fill = value_log))+
 
 ```
 
-
-
-
-
-
 # Supplemental information
 
 ## Comparing predictors
 
 This block compares the residues predicted as to be disordered across the entire proteomes of yeast and human using different disorders. A Venn diagram is generated to illustrate the overlap between different methods
 
-```{r compare index ,echo=FALSE,message=FALSE,warning=FALSE}
+```{r compare index ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5}
 # This blocks compares the residues predicted as to be disordered across the entire proteomes of yeas and human using different disorders. A Venn diagram is generated to illustrate the overlap between different methods 
 
 # Yeast predictors
@@ -1388,10 +1384,11 @@ plot(euler(human_sets, shape = "ellipse"), quantities = TRUE)
 
 ## Supp. Fig. 5
 
-###a
+### a
+
 #### Yeast
 
-```{r yeast composition ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=10}
+```{r yeast composition ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=7,fig.width=7}
 ##YEAST
 
 yeastSeq_all<-yeastDiso$Sequence
@@ -1569,9 +1566,9 @@ fig<-ggarrange(plotXenopusComp,plotXenopusIupred_DC,plotXenopusSpot_DC,plotXenop
 annotate_figure(fig,left = text_grob("Comp. Disorder - Comp. Universe / Comp. Universe", rot = 90,size = 16))
 ```
 
-###d
+### d
 
-```{r Lollipop plot for all human kinases ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=3,fig.width=10}
+```{r Lollipop plot for all human kinases ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=10}
 # Lollipop plots for other human kinases targets
 
 subset(predictorsFisher_data,grepl(pattern = "MAPK|AURK|PLK|NEK|DYRK",organism)) %>%  
@@ -1588,11 +1585,11 @@ subset(predictorsFisher_data,grepl(pattern = "MAPK|AURK|PLK|NEK|DYRK",organism))
     xlab("")
 ```
 
-###e
+### e
 
 Calculate the porcentage of disorder of human CDK targets vs the rest of the phosphoproteome with all available predictors
 
-```{r human disorder percentage for all predictors ,echo=FALSE,message=FALSE,warning=FALSE}
+```{r human disorder percentage for all predictors ,echo=FALSE,message=FALSE,warning=FALSE,,fig.height=5,fig.width=15}
 
 
 ggplot(yeastIntersect_reshaped_disoPerc,aes(x=Predictor, y=`Percentage of disorder`)) +
@@ -1633,11 +1630,7 @@ scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
 scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE)
 ```
 
-
-
-
-
-```{r juandisotes entire function, eval=FALSE}
+```{r juandisotes entire function, eval=FALSE,,echo=FALSE,message=FALSE,warning=FALSE}
 
 
 
