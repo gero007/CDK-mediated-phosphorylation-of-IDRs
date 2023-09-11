@@ -36,8 +36,16 @@ library(ggrepel)
 library(ggsci)
 library(scales)
 library(data.table)
-library(reshape2)
 library(frapplot)
+library(viridis)
+library(wesanderson)
+library(pheatmap)
+library(gplots)
+library(ggplot2)
+library(ComplexHeatmap)
+library(useful)
+library(missForest)
+library(ggbreak)
 
 if (file.exists("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")) {
   load("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")
@@ -419,6 +427,473 @@ save.image("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")}
 ```
 
 # Main figures
+
+## Fig. 2
+
+### b
+```{r embryo heatmap - High-time resolutionr,echo=FALSE,message=FALSE,warning=FALSE,fig.height=6,fig.width=5}
+#Load data#
+
+PeptideRatioResults <- read.csv('phosphorylation_data/Valverde_data/Peptide_Ratio_Results.csv', stringsAsFactors = FALSE)
+
+#changing class of variable of interest#
+
+PeptideRatioResults$RatioLightToHeavy <- as.numeric(as.character(PeptideRatioResults$RatioLightToHeavy))
+
+#Remove iRT peptides#
+
+PeptideRatioResults <-  filter(PeptideRatioResults, Protein != '>sp|P00001|Biognosys|iRT Kit Fusion')
+
+#Transforming data to log2#
+
+PeptideRatioResults <- PeptideRatioResults %>%
+  mutate(log2values = log2(RatioLightToHeavy))
+
+#Converting time values to numeric#
+
+#Change of time values so that they are sorted chronologically#
+
+PeptideRatioResults$Condition[PeptideRatioResults$Condition == "0'"] <- "0h00'"
+
+PeptideRatioResults$Condition[PeptideRatioResults$Condition == "30'"] <- "0h30'"
+
+PeptideRatioResults$Condition[PeptideRatioResults$Condition == "15'"] <- "0h15'"
+
+PeptideRatioResults$Condition[PeptideRatioResults$Condition == "60'"] <- "1h00'"
+
+#Separating hours and minutes in different columns#
+
+PeptideRatioResults <- PeptideRatioResults %>%
+  separate(Condition, c("hours", "minutes"), "h")
+
+#Gather only numerical from minutes column#
+
+PeptideRatioResults$minutes <-  parse_number(PeptideRatioResults$minutes)
+
+#Converting hours to numeric values#
+
+PeptideRatioResults$hours <- as.numeric(PeptideRatioResults$hours)
+
+#Multiplying hours value per 60 to get minutes#
+
+PeptideRatioResults$hoursX60 <- PeptideRatioResults$hours * 60
+
+#Adding minutes from hours to minutes to get final time#
+
+PeptideRatioResults$TimeMinutes <- PeptideRatioResults$minutes + PeptideRatioResults$hoursX60
+
+#Tidying up#
+
+PeptideRatioResults <- subset(PeptideRatioResults, select = -c(hours, minutes, hoursX60))
+
+#Mean intensities and SD per time point (averaging of bio-replicates)#
+
+PeptideRatioResults <- PeptideRatioResults %>%
+  group_by(Protein, Peptide, Peptide.Modified.Sequence, TimeMinutes) %>%
+  summarise(MeanIntensity = mean(RatioLightToHeavy), SDIntensity = sd(RatioLightToHeavy), MeanLog2 = mean(log2values), SDLog2 = sd(log2values))
+
+#Data from Long format to Wide format#
+
+PeptideRatioResults_Wide <- dcast(PeptideRatioResults, Protein + Peptide + Peptide.Modified.Sequence ~ TimeMinutes, value.var = c('MeanLog2'))
+
+#Uniting columns#
+
+PeptideRatioResults_Wide <- unite(PeptideRatioResults_Wide, 'Protein_Peptide', c('Protein', 'Peptide.Modified.Sequence'), sep = '|', remove = FALSE )
+
+#Removing columns and adding row names#
+rownames(PeptideRatioResults_Wide) <- PeptideRatioResults_Wide[, 1]
+PeptideRatioResults_Wide <- PeptideRatioResults_Wide[, -c(1, 2, 3, 4)] 
+
+#Converting to a numeric matrix#
+
+PeptideRatioResults_Wide_AsMatrix <- as.matrix(PeptideRatioResults_Wide)
+
+#Removing temporarily those with inf values#
+
+PeptideRatioResults_Wide_AsMatrix <- PeptideRatioResults_Wide_AsMatrix[!is.infinite(rowSums(PeptideRatioResults_Wide_AsMatrix)),]
+
+#plotting#
+
+# heatmap(PeptideRatioResults_Wide_AsMatrix, Colv = NA, scale = "row")
+
+#Using Complex Heatmap
+
+#transposing in order to apply scale#
+
+PeptideRatioResults_Wide_AsMatrix <- t(PeptideRatioResults_Wide_AsMatrix)
+
+#scaling
+
+PeptideRatioResults_Wide_AsMatrix_Zscored <- scale(PeptideRatioResults_Wide_AsMatrix)
+
+#transposing again#
+
+PeptideRatioResults_Wide_AsMatrix_Zscored <- t(PeptideRatioResults_Wide_AsMatrix_Zscored)
+
+#plotting with complex heatmap
+# Heatmap(PeptideRatioResults_Wide_AsMatrix_Zscored, column_order = colnames(PeptideRatioResults_Wide_AsMatrix_Zscored),
+#         clustering_distance_rows = 'spearman', clustering_method_rows = 'complete',
+#         show_row_names =TRUE, row_dend_side = "left", width = unit(7.5, "cm"),height = unit(15, 'cm'),
+#         cluster_row_slices = TRUE, border = TRUE, row_dend_width = unit(2, 'cm'),
+#         show_parent_dend_line = FALSE, name = 'Z-score', row_names_gp = gpar(fontsize = 5), column_names_gp = gpar(fontsize = 5),
+#         column_names_rot = 45)
+
+#to replace missing values 
+#since data is mostly complete, I will replace a few missing values found in some of the p-sites, in order to not miss on their trends
+
+PeptideRatioResults_Wide_Complete <- PeptideRatioResults_Wide
+
+#Turning -inf into NA
+is.na(PeptideRatioResults_Wide_Complete) <- do.call(cbind,lapply(PeptideRatioResults_Wide_Complete, is.infinite))
+
+#Replacing missing values
+PeptideRatioResults_Wide_Complete <- simple.impute.data.frame(PeptideRatioResults_Wide_Complete, min)
+
+#Assigning row names again
+row.names(PeptideRatioResults_Wide_Complete) <- row.names(PeptideRatioResults_Wide_Complete)
+
+#Plotting again to assess results
+
+#Converting to a numeric matrix#
+
+PeptideRatioResults_Wide_Complete_AsMatrix <- as.matrix(PeptideRatioResults_Wide_Complete)
+
+#Getting z scores 
+
+#transposing in order to apply scale#
+
+PeptideRatioResults_Wide_Complete_AsMatrix <- t(PeptideRatioResults_Wide_Complete_AsMatrix)
+
+#scaling
+
+PeptideRatioResults_Wide_Complete_AsMatrix_Zscored <- scale(PeptideRatioResults_Wide_Complete_AsMatrix)
+
+#transposing again#
+
+PeptideRatioResults_Wide_Complete_AsMatrix_Zscored <- t(PeptideRatioResults_Wide_Complete_AsMatrix_Zscored)
+
+#plotting with complex heatmap
+
+#All (scale has to include from -4 to 3)
+# Heatmap(PeptideRatioResults_Wide_Complete_AsMatrix_Zscored, column_order = colnames(PeptideRatioResults_Wide_Complete_AsMatrix_Zscored),
+#         clustering_distance_rows = 'spearman', clustering_method_rows = 'complete',
+#         show_row_names =TRUE, row_dend_side = "left", width = unit(7.5, "cm"),height = unit(15, 'cm'),
+#         cluster_row_slices = TRUE, border = TRUE, row_dend_width = unit(2, 'cm'),
+#         show_parent_dend_line = FALSE, name = 'Z-score', row_names_gp = gpar(fontsize = 5), column_names_gp = gpar(fontsize = 5),
+#         column_names_rot = 45)
+
+
+library(circlize)
+col_fun = colorRamp2(c(-2.5, 0, 2.5), c("cyan", "black", "yellow"))
+
+Heatmap(PeptideRatioResults_Wide_Complete_AsMatrix_Zscored, column_order = colnames(PeptideRatioResults_Wide_Complete_AsMatrix_Zscored),
+        clustering_distance_rows = 'spearman', clustering_method_rows = 'complete',
+        show_row_names =FALSE, row_dend_side = "left",
+        cluster_row_slices = TRUE, border = TRUE, row_dend_width = unit(1, 'cm'),
+        show_parent_dend_line = FALSE, name = 'Z-score', row_names_gp = gpar(fontsize = 5), column_names_gp = gpar(fontsize = 6),
+        column_names_rot = 45, col = col_fun)
+
+
+
+```
+### c
+
+```{r single psites - biological processes ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=6,fig.width=5}
+PeptideRatioResults <- read.csv('~/Downloads/JuanScripts/Peptide Ratio Results.csv', stringsAsFactors = FALSE)
+
+#Remove iRT peptides#
+
+PeptideRatioResults <-  filter(PeptideRatioResults, Protein != '>sp|P00001|Biognosys|iRT Kit Fusion')
+
+#changing class of variable of interest
+
+PeptideRatioResults$RatioLightToHeavy <- as.numeric(as.character(PeptideRatioResults$RatioLightToHeavy))
+
+#Change of time values so that they are sorted chronologically#
+
+PeptideRatioResults$Condition[PeptideRatioResults$Condition == "0'"] <- "0h00'"
+
+PeptideRatioResults$Condition[PeptideRatioResults$Condition == "30'"] <- "0h30'"
+
+PeptideRatioResults$Condition[PeptideRatioResults$Condition == "15'"] <- "0h15'"
+
+PeptideRatioResults$Condition[PeptideRatioResults$Condition == "60'"] <- "1h00'"
+
+#Converting time values to numeric#
+
+#Separating hours and minutes in different columns#
+
+PeptideRatioResults <- PeptideRatioResults %>%
+  separate(Condition, c("hours", "minutes"), "h")
+
+#Gather only numerical from minutes column#
+
+PeptideRatioResults$minutes <-  parse_number(PeptideRatioResults$minutes)
+
+#Converting hours to numeric values#
+
+PeptideRatioResults$hours <- as.numeric(PeptideRatioResults$hours)
+
+#Multiplying hours value per 60 to get minutes#
+
+PeptideRatioResults$hoursX60 <- PeptideRatioResults$hours * 60
+
+#Adding minutes from hours to minutes to get final time#
+
+PeptideRatioResults$TimeMinutes <- PeptideRatioResults$minutes + PeptideRatioResults$hoursX60
+
+#Tidying up the matrix#
+
+PeptideRatioResults <- subset(PeptideRatioResults, select = -c(hours, minutes, hoursX60))
+
+#Log2 transforming data ---- REMEMBER: comment out for line plots!!!!
+
+PeptideRatioResults$RatioLightToHeavy <- log2(PeptideRatioResults$RatioLightToHeavy)
+
+#Removing -infs
+
+PeptideRatioResults_NoMVS <- PeptideRatioResults[!PeptideRatioResults$RatioLightToHeavy=='-Inf',]
+
+PeptideRatioResults_NoMVS_mean <- PeptideRatioResults_NoMVS %>% 
+  group_by(Peptide.Modified.Sequence, TimeMinutes) %>% 
+  summarize(average = mean(RatioLightToHeavy))
+
+#Plotting 
+
+#Chromatin remodeling
+x <- ggplot(subset(PeptideRatioResults_NoMVS, Peptide.Modified.Sequence %in% c("SLFLSVES[+80]PK")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 6)+
+  scale_color_manual(values = c("darkorchid1", "darkmagenta", "darkorchid4"))+
+  geom_point(colour = 'white', size = 2)+
+  geom_line(subset(PeptideRatioResults_NoMVS_mean, Peptide.Modified.Sequence %in% c("SLFLSVES[+80]PK")), 
+            mapping = aes(x = TimeMinutes, y = average), size = 1) +
+  ggtitle("ID_step3_010113|kdm3b")+
+  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
+  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
+  theme_bw()+
+  scale_y_continuous(breaks = c(0, 0.05, 0.10, 0.15, 0.20))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
+        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none',
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5))
+
+x + scale_x_break(c(35, 57), scales = 4, space = 0.5)
+
+#DNA replication
+
+q <- ggplot(subset(PeptideRatioResults_NoMVS, Peptide.Modified.Sequence %in% c("SSTLTSSAC[+57]SVFQS[+80]PK")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 6)+
+  scale_color_manual(values = c("darkturquoise", "cyan", "darkslategray3", "darkslategray1"))+
+  geom_point(colour = 'white', size = 2)+
+  geom_line(subset(PeptideRatioResults_NoMVS_mean, Peptide.Modified.Sequence %in% c("SSTLTSSAC[+57]SVFQS[+80]PK")), 
+            mapping = aes(x = TimeMinutes, y = average), size = 1) +
+  ggtitle("ID_step3_001277|mcm10")+
+  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
+  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
+  theme_bw()+
+  scale_y_continuous(breaks = c(-0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
+        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none',
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5))
+q + scale_x_break(c(35, 57), scales = 4, space = 0.5)
+
+#RNP processing
+
+z <- ggplot(subset(PeptideRatioResults_NoMVS, Peptide.Modified.Sequence %in% c("VDVKPEAPVHS[+80]PR")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 6)+
+  scale_color_manual(values = c("darkorange"))+
+  geom_point(colour = 'white', size = 2)+
+  geom_line(subset(PeptideRatioResults_NoMVS_mean, Peptide.Modified.Sequence %in% c("VDVKPEAPVHS[+80]PR")), 
+            mapping = aes(x = TimeMinutes, y = average), size = 1) +
+  ggtitle("ID_step3_008661|g3bp2")+
+  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
+  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
+  theme_bw()+
+  scale_y_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
+        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none',
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5))
+z + scale_x_break(c(35, 57), scales = 4, space = 0.5)
+#NPC
+
+w <- ggplot(subset(PeptideRatioResults_NoMVS, Peptide.Modified.Sequence %in% c("FSNFPSSLDPYPDVRS[+80]PR")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 6)+
+  scale_color_manual(values = c("deepskyblue4"))+
+  geom_point(colour = 'white', size = 2)+
+  geom_line(subset(PeptideRatioResults_NoMVS_mean, Peptide.Modified.Sequence %in% c("FSNFPSSLDPYPDVRS[+80]PR")), 
+            mapping = aes(x = TimeMinutes, y = average), size = 1) +
+  ggtitle("D_step3_007660|nup98")+
+  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
+  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
+  theme_bw()+
+  scale_y_continuous(breaks = c(-0.25, 0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
+        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none',
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5))
+
+w + scale_x_break(c(35, 57), scales = 4, space = 0.5)
+
+```
+
+### d
+```{r single psites - CDK1 Y15,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=6}
+
+ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_000299|cdk1a")), aes(x = TimeMinutes, y = exp(RatioLightToHeavy), color = Peptide.Modified.Sequence))+
+  geom_point(size = 6)+
+  scale_color_manual(values = c("dodgerblue2"))+
+  geom_point(colour = 'white', size = 2)+
+  geom_line(subset(PeptideRatioResults_NoMVS_mean, Peptide.Modified.Sequence %in% c("IGEGTY[+80]GVVYK")), 
+            mapping = aes(x = TimeMinutes, y = exp(average)), size = 1) +
+  ggtitle("Cdk1 - Y15")+
+  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
+  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
+  theme_bw() + 
+  scale_y_continuous(breaks = c(0.00025,0.00050,0.00075,0.01), limits = c(0, 0.001))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black", size = 0.5),
+       axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none',
+       panel.border = element_rect(colour = "black", fill=NA, size=0.5)) + scale_x_break(c(35, 57), scales = 4, space = 0.5)
+
+
+```
+
+### e
+```{r single psites - CDK1 network,echo=FALSE,message=FALSE,warning=FALSE,fig.height=6,fig.width=5,eval=FALSE}
+
+#Plotting 
+
+
+#Plot with nice aesthetics for manuscript
+#RNA processing
+#Proteins
+#ID_step3_000442|cpe1b
+#ID_step3_008661|g3bp2
+#ID_step3_009676|cnot1
+#ID_step3_007196|pan2
+#Colors 
+#"darkorange", "darkorange3", "#E7B800"
+
+#For Protein
+
+ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_007196|pan2")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 6)+
+  scale_color_manual(values = c("darkorange", "darkorange3", "#E7B800"))+
+  geom_point(colour = 'white', size = 2)+
+  geom_smooth(method = 'loess', span = 0.4, se = FALSE)+
+  ggtitle("ID_step3_007196|pan2")+
+  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
+  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
+  theme_bw()+
+  #scale_y_continuous(breaks = c(-10, -8, -6, -4, -2, 0, 2, 4), limits = c(-10, -1))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
+        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none')
+
+#For Peptide
+
+ggplot(subset(PeptideRatioResults_NoMVS, Peptide.Modified.Sequence %in% c("VDVKPEAPVHS[+80]PR")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 6)+
+  scale_color_manual(values = c("darkorange", "darkorange3", "#E7B800"))+
+  geom_point(colour = 'white', size = 2)+
+  geom_smooth(method = 'loess', span = 0.4, se = FALSE)+
+  ggtitle("ID_step3_008661|g3bp2")+
+  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
+  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
+  theme_bw()+
+  scale_y_continuous(breaks = c(-10, -8, -6, -4, -2, 0, 2, 4), limits = c(-10, -1))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
+        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none')
+
+#NPC
+#Proteins
+#ID_step3_000682|elys
+#ID_step3_008724|nu107
+#ID_step3_007660|nup98
+#ID_step3_003271|nup53
+#Colors 
+#"deepskyblue1", "deepskyblue4", "#E7B800"
+
+#For Protein
+
+ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_000682|elys")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 6)+
+  scale_color_manual(values = c("deepskyblue1", "deepskyblue4", "#E7B800"))+
+  geom_point(colour = 'white', size = 2)+
+  geom_smooth(method = 'loess', span = 0.4, se = FALSE)+
+  ggtitle("ID_step3_000682|elys")+
+  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
+  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
+  theme_bw()+
+  scale_y_continuous(breaks = c(-12, -10, -8, -6, -4, -2, 0, 2, 4), limits = c(-12, -2))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
+        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none')
+
+
+#DNA Replication
+#Proteins
+#ID_step3_007400|cdt1
+#ID_step3_000611|dpola
+#ID_step3_003090|tob1a
+#ID_step3_009358|rif1
+#Colors
+#"darkturquoise", "darkslategray1", "darkslategray3", "darkslategray4"
+
+
+#For Protein
+
+ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_003090|tob1a")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 6)+
+  scale_color_manual(values = c("darkturquoise", "darkcyan", "darkslategray3", "darkslategray1"))+
+  geom_point(colour = 'white', size = 2)+
+  geom_smooth(method = 'loess', span = 0.4, se = FALSE)+
+  ggtitle("ID_step3_003090|tob1a")+
+  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
+  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
+  theme_bw()+
+  scale_y_continuous(breaks = c(-12, -10, -8, -6, -4, -2, 0, 2, 4))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
+        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none')
+
+
+#Chromatin remodeling
+#Proteins
+#ID_step3_011947|ep300
+#ID_step3_009741|ari1a
+#ID_step3_010113|kdm3b
+#ID_step3_005468|p66a
+#Colors
+#"darkorchid1", "darkmagenta", "darkorchid4"
+
+ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_005468|p66a")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 6)+
+  scale_color_manual(values = c("darkorchid1", "darkmagenta", "darkorchid4"))+
+  geom_point(colour = 'white', size = 2)+
+  geom_smooth(method = 'loess', span = 0.4, se = FALSE)+
+  ggtitle("ID_step3_005468|p66a")+
+  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
+  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
+  theme_bw()+
+  scale_y_continuous(breaks = c(-12, -10, -8, -6, -4, -2, 0, 2, 4))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
+        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none')
+
+#Mitosis
+#Proteins
+#ID_step3_000299|cdk1a
+#ID_step3_002536|gwl
+#ID_step3_001469|nipa
+#ID_step3_009637|apc1
+#	ID_step3_002025|smc4
+#Colors
+#"firebrick2", "firebrick", "#E7B800"
+#"dodgerblue2"
+
+
+
+#Line plot as suggested by Daniel for paper
+
+#Creat df with mean values
+
+
+
+```
 
 ## Fig. 3
 

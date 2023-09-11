@@ -2,6 +2,33 @@ CDK-mediated phosphoryations of IDRs
 ================
 J.M. Valverde & G. Dubra
 
+- [Main figures](#main-figures)
+  - [Fig. 2](#fig-2)
+    - [b](#b)
+    - [d](#d)
+    - [e](#e)
+  - [Fig. 3](#fig-3)
+    - [b](#b-1)
+    - [c](#c)
+    - [d](#d-1)
+    - [e](#e-1)
+    - [f](#f)
+  - [Fig. 4](#fig-4)
+    - [a](#a)
+  - [Fig. 6](#fig-6)
+    - [c](#c-1)
+    - [d](#d-2)
+  - [Fig. 7](#fig-7)
+    - [c](#c-2)
+- [Supplemental information](#supplemental-information)
+  - [Comparing predictors](#comparing-predictors)
+  - [Supp. Fig. 5](#supp-fig-5)
+    - [a](#a-1)
+    - [d](#d-3)
+    - [e](#e-2)
+  - [Supp. Fig. 7](#supp-fig-7)
+    - [Deleted LR domain](#deleted-lr-domain)
+
 This repository provides the source code and data for all the analyses
 performed in the publication “A Cyclin dependent kinase-mediated
 phosphorylation switch of disordered protein condensation” (Valverde,
@@ -9,31 +36,22 @@ Dubra et al., 2023). This current GitHub readme file was automaticaly
 generated, using R Studio, from a R markdown (README.Rmd) where all the
 code used in the paper is recompiled.
 
-
-- [Main figures](#main-figures)
-  - [Fig. 3](#fig-3)
-    - [b](#b)
-    - [c](#c)
-    - [d](#d)
-    - [e](#e)
-    - [f](#f)
-  - [Fig. 4](#fig-4)
-    - [a](#a)
-  - [Fig. 6](#fig-6)
-    - [c](#c-1)
-    - [d](#d-1)
-  - [Fig. 7](#fig-7)
-    - [c](#c-2)
-- [Supplemental information](#supplemental-information)
-  - [Comparing predictors](#comparing-predictors)
-  - [Supp. Fig. 5](#supp-fig-5)
-    - [a](#a-1)
-    - [d](#d-2)
-    - [e](#e-1)
-  - [Supp. Fig. 7](#supp-fig-7)
-    - [Deleted LR domain](#deleted-lr-domain)
-
 # Main figures
+
+## Fig. 2
+
+### b
+
+![](README_files/figure-gfm/embryo%20heatmap%20-%20High-time%20resolutionr-1.png)<!-- -->
+\### c
+
+![](README_files/figure-gfm/single%20psites%20-%20biological%20processes%20-1.png)<!-- -->![](README_files/figure-gfm/single%20psites%20-%20biological%20processes%20-2.png)<!-- -->![](README_files/figure-gfm/single%20psites%20-%20biological%20processes%20-3.png)<!-- -->![](README_files/figure-gfm/single%20psites%20-%20biological%20processes%20-4.png)<!-- -->
+
+### d
+
+![](README_files/figure-gfm/single%20psites%20-%20CDK1%20Y15-1.png)<!-- -->
+
+### e
 
 ## Fig. 3
 
@@ -301,8 +319,7 @@ code used in the paper is recompiled.
 ### a
 
 ![](README_files/figure-gfm/CDK%20targets%20and%20Dynamic%20phosphoproteins%20in%20MLOs-1.png)<!-- -->
-
-### b
+\### b
 
 #### Human
 
