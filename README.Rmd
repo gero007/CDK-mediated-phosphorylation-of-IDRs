@@ -431,6 +431,7 @@ save.image("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")}
 ## Fig. 2
 
 ### b
+
 ```{r embryo heatmap - High-time resolutionr,echo=FALSE,message=FALSE,warning=FALSE,fig.height=6,fig.width=5}
 #Load data#
 
@@ -596,6 +597,7 @@ Heatmap(PeptideRatioResults_Wide_Complete_AsMatrix_Zscored, column_order = colna
 
 
 ```
+
 ### c
 
 ```{r single psites - biological processes ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=6,fig.width=5}
@@ -735,6 +737,7 @@ w + scale_x_break(c(35, 57), scales = 4, space = 0.5)
 ```
 
 ### d
+
 ```{r single psites - CDK1 Y15,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=6}
 
 ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_000299|cdk1a")), aes(x = TimeMinutes, y = exp(RatioLightToHeavy), color = Peptide.Modified.Sequence))+
@@ -756,6 +759,7 @@ ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_000299|cdk1a")
 ```
 
 ### e
+
 ```{r single psites - CDK1 network,echo=FALSE,message=FALSE,warning=FALSE,fig.height=6,fig.width=5,eval=FALSE}
 
 #Plotting 
@@ -1105,8 +1109,6 @@ rm(human_data_dt)
 ```
 
 ### c
-
- 
 
 ```{r Expected vs Observed phospho S/T distribution in xenopus,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5}
 melted_all_predictions_phospho <- all_predictions_phospho %>% melt(id.vars=c("ID","anova_sig","hCDK1target","length"),value.name = "psites_diso",measure.vars=c("psites_expct_diso","psites_obsv_diso"))
@@ -1863,6 +1865,7 @@ ggplot(plot_table, aes(fill=MLO, y=Freq, x=dataset)) +
     scale_fill_manual(values = c("white",pal_tron()(7)[c(4,1,3,2,5)],"aquamarine4","brown2","khaki2","dodgerblue3")) + coord_flip() 
     
 ```
+
 ### b
 
 #### Human
@@ -1892,6 +1895,7 @@ IupredXenopus <- IUpredScoresPlotGenerator(subset(all_predictions_phospho,ID %in
 ### c
 
 #### Interphase
+
 ```{r FRAP modelling - interphase ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=7}
 
 #preprocessing the data
@@ -2263,7 +2267,6 @@ ggplot(data=plotData,aes(x = time,y = normalized_intensity,color=region))+
 
 
 ```
-
 
 ### d
 
@@ -2746,6 +2749,7 @@ ggplot(dLR_quant,aes(x=Treatment, y=Foci_Nucleus)) +
   scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
   scale_color_manual(values = pal_jco()(10)[c(5,2)],guide="none")
 ```
+
 ### Deleted N-terminus (Repeats + LR)
 
 ```{r optodroplet quantification - Deleted N-terminus (Repeats + LR) ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=6}

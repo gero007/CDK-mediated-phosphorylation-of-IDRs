@@ -12,21 +12,23 @@ code used in the paper is recompiled.
 - [Main figures](#main-figures)
   - [Fig. 2](#fig-2)
     - [b](#b)
+    - [c](#c)
     - [d](#d)
     - [e](#e)
   - [Fig. 3](#fig-3)
     - [b](#b-1)
-    - [c](#c)
+    - [c](#c-1)
     - [d](#d-1)
     - [e](#e-1)
     - [f](#f)
   - [Fig. 4](#fig-4)
     - [a](#a)
+    - [b](#b-2)
   - [Fig. 6](#fig-6)
-    - [c](#c-1)
+    - [c](#c-2)
     - [d](#d-2)
   - [Fig. 7](#fig-7)
-    - [c](#c-2)
+    - [c](#c-3)
 - [Supplemental information](#supplemental-information)
   - [Comparing predictors](#comparing-predictors)
   - [Supp. Fig. 5](#supp-fig-5)
@@ -35,6 +37,8 @@ code used in the paper is recompiled.
     - [e](#e-2)
   - [Supp. Fig. 7](#supp-fig-7)
     - [Deleted LR domain](#deleted-lr-domain)
+    - [Deleted N-terminus (Repeats +
+      LR)](#deleted-n-terminus-repeats--lr)
 
 
 # Main figures
@@ -44,7 +48,8 @@ code used in the paper is recompiled.
 ### b
 
 ![](README_files/figure-gfm/embryo%20heatmap%20-%20High-time%20resolutionr-1.png)<!-- -->
-\### c
+
+### c
 
 ![](README_files/figure-gfm/single%20psites%20-%20biological%20processes%20-1.png)<!-- -->![](README_files/figure-gfm/single%20psites%20-%20biological%20processes%20-2.png)<!-- -->![](README_files/figure-gfm/single%20psites%20-%20biological%20processes%20-3.png)<!-- -->![](README_files/figure-gfm/single%20psites%20-%20biological%20processes%20-4.png)<!-- -->
 
@@ -320,7 +325,8 @@ code used in the paper is recompiled.
 ### a
 
 ![](README_files/figure-gfm/CDK%20targets%20and%20Dynamic%20phosphoproteins%20in%20MLOs-1.png)<!-- -->
-\### b
+
+### b
 
 #### Human
 
