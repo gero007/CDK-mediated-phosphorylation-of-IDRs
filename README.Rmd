@@ -1415,7 +1415,9 @@ IupredXenopus <- IUpredScoresPlotGenerator(subset(all_predictions_phospho,ID %in
 ## Fig. 6
 
 ### c
-```{r FRAP modelling ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5}
+
+#### Interphase
+```{r FRAP modelling - interphase ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=7}
 
 #preprocessing the data
 # https://github.com/GuanqiaoDing/frapplot/blob/master/data-raw/preprocess.R
@@ -1424,27 +1426,27 @@ IupredXenopus <- IUpredScoresPlotGenerator(subset(all_predictions_phospho,ID %in
 
 #load the data from bleached regions
 
-Avg_Spectrum_ROI1 <- read_delim("37/Avg_Spectrum_ROI1.txt", 
+Avg_Spectrum_ROI1 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase/Avg_Spectrum_ROI1.txt", 
     delim = "\t", escape_double = FALSE, col_names = FALSE, 
     trim_ws = TRUE)
-Avg_Spectrum_ROI2 <- read_delim("37/Avg_Spectrum_ROI2.txt", 
+
+Avg_Spectrum_ROI2 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase/Avg_Spectrum_ROI2.txt", 
     delim = "\t", escape_double = FALSE, col_names = FALSE, 
     trim_ws = TRUE)
 
 #load the data from unbleached regions
 
-Avg_Spectrum_UB1 <- read_delim("FRAP_data/Andres-Sanchez_data//Avg_Spectrum_UB1.txt", 
+Avg_Spectrum_UB1 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase/Avg_Spectrum_UB1.txt", 
     delim = "\t", escape_double = FALSE, col_names = FALSE, 
     trim_ws = TRUE)
-Avg_Spectrum_UB2 <- read_delim("37/Avg_Spectrum_UB2.txt", 
+Avg_Spectrum_UB2 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase/Avg_Spectrum_UB2.txt", 
     delim = "\t", escape_double = FALSE, col_names = FALSE, 
     trim_ws = TRUE)
 
 #load the data from nucleus to normalise with it later on
-Avg_Spectrum_nucleus <- read_delim("37/Avg_Spectrum_nucleus.txt", 
+Avg_Spectrum_nucleus <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase/Avg_Spectrum_nucleus.txt", 
      delim = "\t", escape_double = FALSE, col_names = FALSE, 
      trim_ws = TRUE)
-
 
 #load the data from all the UB regions (unbleached)
 
@@ -1457,8 +1459,6 @@ ROI_spectrum_matrix_norm <- ROI_spectrum_matrix/bkg_normalizing_vector
 
 UB_spectrum_matrix <- as.matrix(cbind(Avg_Spectrum_UB1[2:99,2],Avg_Spectrum_UB2[2:99,2]))
 UB_spectrum_matrix_norm <- UB_spectrum_matrix/bkg_normalizing_vector
-
-
 
 
 #DATA MODELING
@@ -1495,10 +1495,145 @@ plotData$time <- as.numeric(plotData$time)
 plotData$normalized_intensity <- as.numeric(plotData$normalized_intensity)
 plotData$sd <- as.numeric(plotData$sd)
 
+#NON-LINEAR REGRESSION MODEL
+#   model: FR ~ c - a * exp(b * time)
+a <- frap_info$model[[1]]$m$getPars()[1]
+b <- frap_info$model[[1]]$m$getPars()[2]
+c <- frap_info$model[[1]]$m$getPars()[3]
+t_half <- frap_info$summary$halftime
+tau <- frap_info$summary$tau
+recov <- frap_info$summary$total_recovery
 
 
+#FINAL VERSION OF THE CODE FOR THE FIGURES OF RECOVERY CURVE
 
 
+ggplot(data=plotData,aes(x = time,y = normalized_intensity,color=region))+
+    geom_errorbar(aes(ymin=normalized_intensity-sd, ymax=normalized_intensity+sd),color="gray") +
+    geom_point() + 
+    geom_function(fun = function(time){c - a * exp(b * time)}, color="#f69220ff",linewidth=1.9,alpha=0.7) + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+    panel.background = element_blank(), axis.line = element_line(colour = "black"),
+    axis.text=element_text(size=12),
+    axis.title=element_text(size=18),
+    legend.text=element_text(size=12),
+    legend.title = element_text(size=19),
+    axis.text.x = element_text(face="bold",size=18),
+    axis.text.y = element_text(face="bold",size=18)) +
+    ylab("Normalized intensity")+ xlab("Time (s)") +
+    scale_color_manual(values = c("deepskyblue4","cyan4"))
+
+
+```
+
+#### Interphase (high expression)
+
+```{r FRAP modelling - interphase (High expression) ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=7}
+
+#preprocessing the data
+# https://github.com/GuanqiaoDing/frapplot/blob/master/data-raw/preprocess.R
+# Generate data files from raw data
+#
+
+#load the data from bleached regions
+
+Avg_Spectrum_ROI1 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression/Avg_Spectrum_ROI1.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_ROI2 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression/Avg_Spectrum_ROI2.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_ROI3 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression/Avg_Spectrum_ROI3.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_ROI4 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression/Avg_Spectrum_ROI4.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_ROI5 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression/Avg_Spectrum_ROI5.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_ROI6 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression/Avg_Spectrum_ROI6.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_ROI7 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression/Avg_Spectrum_ROI7.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+
+#load the data from unbleached regions
+
+Avg_Spectrum_UB1 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression//Avg_Spectrum_UB1.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_UB2 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression//Avg_Spectrum_UB2.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_UB3 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression//Avg_Spectrum_UB3.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_UB4 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression//Avg_Spectrum_UB5.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_UB5 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression//Avg_Spectrum_UB5.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_UB6 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression//Avg_Spectrum_UB6.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_UB7 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression//Avg_Spectrum_UB7.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+
+#load the data from nucleus to normalise with it later on
+Avg_Spectrum_nucleus <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/interphase high expression//Avg_Spectrum_nucleus.txt", 
+     delim = "\t", escape_double = FALSE, col_names = FALSE, 
+     trim_ws = TRUE)
+
+#load the data from all the UB regions (unbleached)
+
+##for the final figure we removed the last 50s (because acquisition was made for 150s, we keep now from 1s to 100s) of the analysis because the cells were frequently moving in these last seconds, so we use the following code to normalise and remove the 50s last seconds:
+
+bkg_normalizing_vector <- as.numeric(Avg_Spectrum_nucleus[2:99,2][[1]])
+
+ROI_spectrum_matrix <- as.matrix(cbind(Avg_Spectrum_ROI1[2:99,2],Avg_Spectrum_ROI2[2:99,2],Avg_Spectrum_ROI3[2:99,2],Avg_Spectrum_ROI4[2:99,2],Avg_Spectrum_ROI5[2:99,2],Avg_Spectrum_ROI6[2:99,2],Avg_Spectrum_ROI7[2:99,2]))
+ROI_spectrum_matrix_norm <- ROI_spectrum_matrix/bkg_normalizing_vector
+
+UB_spectrum_matrix <- as.matrix(cbind(Avg_Spectrum_UB1[2:99,2],Avg_Spectrum_UB2[2:99,2],Avg_Spectrum_UB3[2:99,2],Avg_Spectrum_UB4[2:99,2],Avg_Spectrum_UB5[2:99,2],Avg_Spectrum_UB6[2:99,2],Avg_Spectrum_UB7[2:99,2]))
+UB_spectrum_matrix_norm <- UB_spectrum_matrix/bkg_normalizing_vector
+
+
+#DATA MODELING
+#______________Model FRAP data____________________________________________
+
+frap_input <- list(ROI=ROI_spectrum_matrix_norm)#,UB=UB_spectrum_df_norm)
+time_vector <- 0:(nrow(ROI_spectrum_matrix)-2)
+frap_info<-frapprocess(frap_input,time_vector)
+
+FRAP_plotData<-as.data.frame(cbind(frap_info$time_points,frap_info$sample_means,frap_info$sample_sd))
+
+
+FRAP_plotData <- cbind(FRAP_plotData,rep("Bleached",nrow(FRAP_plotData)))
+
+colnames(FRAP_plotData) <- c("time","normalized_intensity","sd","region")
+
+#______________UnBleached data____________________________________________
+
+
+# Emulate the frapprocess processing of the data in the unbleached data
+#Normalized by the time before bleaching and remove that datapoint
+UB_spectrum_matrix_norm <- t(t(UB_spectrum_matrix_norm)/UB_spectrum_matrix_norm[1,])
+UB_spectrum_matrix_norm <- UB_spectrum_matrix_norm[-1,]
+
+# calculate sample mean and standard deviation
+UB_spectrum_means <- rowMeans(UB_spectrum_matrix_norm)
+UB_spectrum_sd <- apply(UB_spectrum_matrix_norm, 1, sd)
+
+UnBleached_data <- cbind(FRAP_plotData$time,UB_spectrum_means,UB_spectrum_sd,rep("Un-bleached",nrow(FRAP_plotData)))
+colnames(UnBleached_data) <- c("time","normalized_intensity","sd","region")
+
+plotData <- as.data.frame(rbind(FRAP_plotData,UnBleached_data))
+plotData$time <- as.numeric(plotData$time)
+plotData$normalized_intensity <- as.numeric(plotData$normalized_intensity)
+plotData$sd <- as.numeric(plotData$sd)
 
 #NON-LINEAR REGRESSION MODEL
 #   model: FR ~ c - a * exp(b * time)
@@ -1531,12 +1666,242 @@ ggplot(data=plotData,aes(x = time,y = normalized_intensity,color=region))+
 
 ```
 
+#### Mitosis
+
+```{r FRAP modelling - mitosis,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=7}
+
+#preprocessing the data
+# https://github.com/GuanqiaoDing/frapplot/blob/master/data-raw/preprocess.R
+# Generate data files from raw data
+#
+
+#load the data from bleached regions
+
+Avg_Spectrum_ROI1 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/mitosis/Avg_Spectrum_ROI1.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_ROI2 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/mitosis/Avg_Spectrum_ROI2.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_ROI3 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/mitosis/Avg_Spectrum_ROI3.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_ROI4 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/mitosis/Avg_Spectrum_ROI4.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+
+#load the data from unbleached regions
+
+Avg_Spectrum_UB1 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/mitosis/Avg_Spectrum_UB1.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_UB2 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/mitosis/Avg_Spectrum_UB2.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_UB3 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/mitosis/Avg_Spectrum_UB3.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+Avg_Spectrum_UB4 <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/mitosis/Avg_Spectrum_UB4.txt", 
+    delim = "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+
+#load the data from nucleus to normalise with it later on
+Avg_Spectrum_nucleus <- read_delim("FRAP_data/Andres-Sanchez_data/230829 raw data of representative cells/mitosis/Avg_Spectrum_mitoticchr.txt", 
+     delim = "\t", escape_double = FALSE, col_names = FALSE, 
+     trim_ws = TRUE)
+
+
+#load the data from all the UB regions (unbleached)
+
+##for the final figure we removed the last 50s (because acquisition was made for 150s, we keep now from 1s to 100s) of the analysis because the cells were frequently moving in these last seconds, so we use the following code to normalise and remove the 50s last seconds:
+
+bkg_normalizing_vector <- as.numeric(Avg_Spectrum_nucleus[2:99,2][[1]])
+
+ROI_spectrum_matrix <- as.matrix(cbind(Avg_Spectrum_ROI1[2:99,2],Avg_Spectrum_ROI2[2:99,2],Avg_Spectrum_ROI3[2:99,2],Avg_Spectrum_ROI4[2:99,2]))
+ROI_spectrum_matrix_norm <- ROI_spectrum_matrix/bkg_normalizing_vector
+
+UB_spectrum_matrix <- as.matrix(cbind(Avg_Spectrum_UB1[2:99,2],Avg_Spectrum_UB2[2:99,2],Avg_Spectrum_UB3[2:99,2],Avg_Spectrum_UB4[2:99,2]))
+UB_spectrum_matrix_norm <- UB_spectrum_matrix/bkg_normalizing_vector
+
+
+#DATA MODELING
+#______________Model FRAP data____________________________________________
+
+frap_input <- list(ROI=ROI_spectrum_matrix_norm)#,UB=UB_spectrum_df_norm)
+time_vector <- 0:(nrow(ROI_spectrum_matrix)-2)
+frap_info<-frapprocess(frap_input,time_vector)
+
+FRAP_plotData<-as.data.frame(cbind(frap_info$time_points,frap_info$sample_means,frap_info$sample_sd))
+
+
+FRAP_plotData <- cbind(FRAP_plotData,rep("Bleached",nrow(FRAP_plotData)))
+
+colnames(FRAP_plotData) <- c("time","normalized_intensity","sd","region")
+
+#______________UnBleached data____________________________________________
+
+
+# Emulate the frapprocess processing of the data in the unbleached data
+#Normalized by the time before bleaching and remove that datapoint
+UB_spectrum_matrix_norm <- t(t(UB_spectrum_matrix_norm)/UB_spectrum_matrix_norm[1,])
+UB_spectrum_matrix_norm <- UB_spectrum_matrix_norm[-1,]
+
+# calculate sample mean and standard deviation
+UB_spectrum_means <- rowMeans(UB_spectrum_matrix_norm)
+UB_spectrum_sd <- apply(UB_spectrum_matrix_norm, 1, sd)
+
+UnBleached_data <- cbind(FRAP_plotData$time,UB_spectrum_means,UB_spectrum_sd,rep("Un-bleached",nrow(FRAP_plotData)))
+colnames(UnBleached_data) <- c("time","normalized_intensity","sd","region")
+
+plotData <- as.data.frame(rbind(FRAP_plotData,UnBleached_data))
+plotData$time <- as.numeric(plotData$time)
+plotData$normalized_intensity <- as.numeric(plotData$normalized_intensity)
+plotData$sd <- as.numeric(plotData$sd)
+
+#NON-LINEAR REGRESSION MODEL
+#   model: FR ~ c - a * exp(b * time)
+a <- frap_info$model[[1]]$m$getPars()[1]
+b <- frap_info$model[[1]]$m$getPars()[2]
+c <- frap_info$model[[1]]$m$getPars()[3]
+t_half <- frap_info$summary$halftime
+tau <- frap_info$summary$tau
+recov <- frap_info$summary$total_recovery
+
+
+#FINAL VERSION OF THE CODE FOR THE FIGURES OF RECOVERY CURVE
+
+
+ggplot(data=plotData,aes(x = time,y = normalized_intensity,color=region))+
+    geom_errorbar(aes(ymin=normalized_intensity-sd, ymax=normalized_intensity+sd),color="gray") +
+    geom_point() + 
+    geom_function(fun = function(time){c - a * exp(b * time)}, color="#f69220ff",linewidth=1.9,alpha=0.7) + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+    panel.background = element_blank(), axis.line = element_line(colour = "black"),
+    axis.text=element_text(size=12),
+    axis.title=element_text(size=18),
+    legend.text=element_text(size=12),
+    legend.title = element_text(size=19),
+    axis.text.x = element_text(face="bold",size=18),
+    axis.text.y = element_text(face="bold",size=18)) +
+    ylab("Normalized intensity")+ xlab("Time (s)") +
+    scale_color_manual(values = c("deepskyblue4","cyan4"))
+
+
+```
+
+
 ### d
 
 ```{r FRAP quantification ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5}
 
+thalf <- read_delim("FRAP_data/thalfboth.csv", 
+    delim = ";", escape_double = FALSE, col_names = TRUE, 
+    trim_ws = TRUE)
 
 
+thalf$group <- factor(thalf$group, levels=c("mitosis", "interphase", "interphase high expression"))
+
+
+ggplot(data=thalf, aes(x=group,y=thalf,fill=group))+
+  geom_boxplot(outlier.shape=NA)+
+  geom_dotplot(binaxis='y',fill="black",binwidth=1,alpha=0.8,stackdir = "center")+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+  panel.background = element_blank(), axis.line = element_line(colour = "black"),
+  axis.text=element_text(size=16,face="bold"),
+  axis.title=element_text(size=18,face="bold"),
+  legend.position = "none")+
+  ylab("t half (s)")+xlab("")+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+  scale_fill_manual(values = c("#2aabe2ff", "#fedd10ff", "#f69220ff"))
+
+#statistical test
+#wilcoxon test comparing mitosis vs interphase
+wilcox.test(thalf ~ group, data = subset(thalf,group!="interphase high expression"), alternative = "two.sided",conf.int=T,exact=FALSE)
+#wilcoxon test comparing mitosis vs interphase high expression
+wilcox.test(thalf ~ group, data = subset(thalf,group!="interphase"), alternative = "two.sided",conf.int=T,exact=FALSE)
+#wilcoxon test comparing interphase vs interphase high expression
+wilcox.test(thalf ~ group, data = subset(thalf,group!="mitosis"), alternative = "two.sided",conf.int=T,exact=FALSE)
+
+
+
+
+##to plot the graphs of the recovery data
+recover <- read_delim("FRAP_data/percboth.csv",
+    delim = ";", escape_double = FALSE, col_names = TRUE, 
+    trim_ws = TRUE)
+
+recover$group <- factor(recover$group, levels=c("mitosis", "interphase", "interphase high expression"))
+
+ggplot(data=recover, aes(x=group,y=percent,fill=group))+
+  geom_boxplot(outlier.shape=NA)+
+  geom_dotplot(binaxis='y',fill="black",binwidth=3,alpha=0.8,stackdir = "center")+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+  panel.background = element_blank(), axis.line = element_line(colour = "black"),
+  axis.text=element_text(size=16,face="bold"),
+  axis.title=element_text(size=18,face="bold"),
+  legend.position = "none")+
+  ylab("% recovery")+xlab("")+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+  scale_fill_manual(values = c("#2aabe2ff", "#fedd10ff", "#f69220ff"))
+
+#wilcoxon test comparing mitosis vs interphase
+wilcox.test(percent ~ group, data = subset(recover,group!="interphase high expression"), alternative = "two.sided",conf.int=T,exact=FALSE)
+#wilcoxon test comparing mitosis vs interphase high expression
+wilcox.test(percent ~ group, data = subset(recover,group!="interphase"), alternative = "two.sided",conf.int=T,exact=FALSE)
+#wilcoxon test comparing interphase vs interphase high expression
+wilcox.test(percent ~ group, data = subset(recover,group!="mitosis"), alternative = "two.sided",conf.int=T,exact=FALSE)
+
+```
+
+## Fig. 7
+
+### c
+
+```{r optodroplet quantification - FL ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=6}
+
+Full_length_quant <- read_delim("Optodroplet_data/AlGhoul_data/Fig7_FL.tab", 
+                      delim = "\t", escape_double = FALSE, 
+                      trim_ws = TRUE)
+
+### Full Lenght ###
+kruskal.test(Foci_Nucleus ~ Treat_collapsed, data = Full_length_quant)
+
+# Kruskal-Wallis rank sum test
+# 
+# data:  Foci_Nucleus by Treat_collapsed
+# Kruskal-Wallis chi-squared = 205.15, df = 5, p-value < 2.2e-16
+
+pairwise.wilcox.test(Full_length_quant$Foci_Nucleus, Full_length_quant$Treat_collapsed, p.adjust.method = "BH",)
+
+
+# Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
+# 
+# data:  Full_length_quant$Foci_Nucleus and Full_length_quant$Treat_collapsed 
+# 
+#           DMSO L+ DMSO L- OA L+   OA L-   PA L+ 
+#   DMSO L- 2.1e-14 -       -       -       -     
+#   OA L+   0.3149  8.6e-14 -       -       -     
+#   OA L-   0.0230  5.3e-11 0.1860  -       -     
+#   PA L+   2.0e-15 0.6424  2.1e-14 1.8e-11 -     
+#   PA L-   < 2e-16 7.0e-05 < 2e-16 < 2e-16 0.0011
+# 
+# P value adjustment method: BH 
+
+ggplot(Full_length_quant,aes(x=Treatment, y=Foci_Nucleus)) +
+  geom_violin(aes(fill=Light,color=Light),position=position_dodge(1),bw=2,alpha=1,trim = T,width=1) +
+  geom_boxplot(aes(fill=Light),position=position_dodge(1),width=0.15,outlier.shape = NA,show.legend = F) +
+  ggpubr::theme_classic2() +
+  theme(text = element_text(size=20),legend.position = "bottom",legend.title = element_blank(),axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed")) +
+  scale_y_continuous(limits = c(-1, 80), breaks = c(seq(0, 60, by = 20))) +
+  xlab(NULL) +
+  geom_segment(aes(x = 0.77, y = 61, xend = 1.22, yend = 61)) + annotate(geom="text", x=1, y=62, label="***") +
+  geom_segment(aes(x = 1.77, y = 61, xend = 2.22, yend = 61)) + annotate(geom="text", x=2, y=63, label="n.s.") +
+  geom_segment(aes(x = 2.77, y = 61, xend = 3.22, yend = 61)) + annotate(geom="text", x=3, y=62, label="**") +
+  geom_segment(aes(x = 0.77, y = 65, xend = 1.77, yend = 65)) + annotate(geom="text", x=1.27, y=66, label="***") +
+  geom_segment(aes(x = 1.22, y = 69, xend = 2.22, yend = 69)) + annotate(geom="text", x=1.72, y=71, label="n.s.") +
+  geom_segment(aes(x = 1.22, y = 73, xend = 3.22, yend = 73)) + annotate(geom="text", x=2.22, y=74, label="***") +
+  scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
+  scale_color_manual(values = pal_jco()(10)[c(5,2)],guide="none")
 ```
 
 # Supplemental information
@@ -1854,6 +2219,102 @@ theme(
 scale_y_continuous(limits = c(-20, 135), breaks = c(seq(0, 100, by = 20))) +
 scale_x_discrete(labels = c("Pfilt", "SEG","DisEMBL-465","DisEMBL-HotLoops","ESpritz-DisProt","ESpritz-NMR","ESpritz-Xray","GlobPlot","IUPred-Long","IUPred-Short","JRONN","VSL2b","SPOT")) + xlab(NULL) +
 scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
-scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE) ggtitle("Human")
+scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE) + ggtitle("Human")
 ```
 
+## Supp. Fig. 7
+
+### Deleted LR domain
+
+```{r optodroplet quantification - dLR ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=6}
+
+dLR_quant <- read_delim("Optodroplet_data/AlGhoul_data/SuppFig7_dLR.tab", 
+                                delim = "\t", escape_double = FALSE, 
+                                trim_ws = TRUE)
+kruskal.test(Foci_Nucleus ~ Treat_collapsed, data = dLR_quant)
+
+# Kruskal-Wallis rank sum test
+# 
+# data:  Foci_Nucleus by Treat_collapsed
+# Kruskal-Wallis chi-squared = 204.5, df = 5, p-value < 2.2e-16
+
+pairwise.wilcox.test(dLR_quant$Foci_Nucleus, dLR_quant$Treat_collapsed, p.adjust.method = "BH")
+
+
+# Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
+# 
+# data:  dLR_quant$Foci_Nucleus and dLR_quant$Treat_collapsed 
+# 
+#           DMSO L+ DMSO L- OA L+   OA L-   PA L+ 
+#   DMSO L- < 2e-16 -       -       -       -     
+#   OA L+   0.8143  < 2e-16 -       -       -     
+#   OA L-   1.5e-10 2.3e-05 2.9e-09 -       -     
+#   PA L+   < 2e-16 0.3916  8.9e-16 0.0014  -     
+#   PA L-   < 2e-16 0.7618  < 2e-16 2.9e-05 0.5839
+# 
+# P value adjustment method: BH 
+
+
+ggplot(dLR_quant,aes(x=Treatment, y=Foci_Nucleus)) +
+  geom_violin(aes(fill=Light,color=Light),position=position_dodge(1),bw=2,alpha=1,trim = T,width=1) +
+  geom_boxplot(aes(fill=Light),position=position_dodge(1),width=0.15,outlier.shape = NA,show.legend = F) +
+  ggpubr::theme_classic2() +
+  theme(text = element_text(size=20),legend.position = "bottom",legend.title = element_blank(),axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed")) +
+  scale_y_continuous(limits = c(-1, 80), breaks = c(seq(0, 60, by = 20))) +
+  xlab(NULL) +
+  geom_segment(aes(x = 0.77, y = 61, xend = 1.22, yend = 61)) + annotate(geom="text", x=1, y=62, label="***") +
+  geom_segment(aes(x = 1.77, y = 61, xend = 2.22, yend = 61)) + annotate(geom="text", x=2, y=63, label="n.s.") +
+  geom_segment(aes(x = 2.77, y = 61, xend = 3.22, yend = 61)) + annotate(geom="text", x=3, y=62, label="**") +
+  geom_segment(aes(x = 0.77, y = 65, xend = 1.77, yend = 65)) + annotate(geom="text", x=1.27, y=66, label="***") +
+  geom_segment(aes(x = 1.22, y = 69, xend = 2.22, yend = 69)) + annotate(geom="text", x=1.72, y=71, label="n.s.") +
+  geom_segment(aes(x = 1.22, y = 73, xend = 3.22, yend = 73)) + annotate(geom="text", x=2.22, y=74, label="***") +
+  scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
+  scale_color_manual(values = pal_jco()(10)[c(5,2)],guide="none")
+```
+### Deleted N-terminus (Repeats + LR)
+
+```{r optodroplet quantification - Deleted N-terminus (Repeats + LR) ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=6}
+
+Repeats_LR_quant <- read_delim("Optodroplet_data/AlGhoul_data/SuppFig7_Repeats-LR.tab", 
+                                delim = "\t", escape_double = FALSE, 
+                                trim_ws = TRUE)
+kruskal.test(Foci_Nucleus ~ Treat_collapsed, data = dLR_quant)
+
+# Kruskal-Wallis rank sum test
+# 
+# data:  Foci_Nucleus by Treat_collapsed
+# Kruskal-Wallis chi-squared = 204.5, df = 5, p-value < 2.2e-16
+
+pairwise.wilcox.test(Repeats_LR_quant$Foci_Nucleus, Repeats_LR_quant$Treat_collapsed, p.adjust.method = "BH")
+
+
+# Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
+# 
+# data:  dLR_quant$Foci_Nucleus and dLR_quant$Treat_collapsed 
+# 
+#           DMSO L+ DMSO L- OA L+   OA L-   PA L+ 
+#   DMSO L- < 2e-16 -       -       -       -     
+#   OA L+   0.8143  < 2e-16 -       -       -     
+#   OA L-   1.5e-10 2.3e-05 2.9e-09 -       -     
+#   PA L+   < 2e-16 0.3916  8.9e-16 0.0014  -     
+#   PA L-   < 2e-16 0.7618  < 2e-16 2.9e-05 0.5839
+# 
+# P value adjustment method: BH 
+
+
+ggplot(Repeats_LR_quant,aes(x=Treatment, y=Foci_Nucleus)) +
+  geom_violin(aes(fill=Light,color=Light),position=position_dodge(1),bw=2,alpha=1,trim = T,width=1) +
+  geom_boxplot(aes(fill=Light),position=position_dodge(1),width=0.15,outlier.shape = NA,show.legend = F) +
+  ggpubr::theme_classic2() +
+  theme(text = element_text(size=20),legend.position = "bottom",legend.title = element_blank(),axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed")) +
+  scale_y_continuous(limits = c(-1, 80), breaks = c(seq(0, 60, by = 20))) +
+  xlab(NULL) +
+  geom_segment(aes(x = 0.77, y = 61, xend = 1.22, yend = 61)) + annotate(geom="text", x=1, y=62, label="***") +
+  geom_segment(aes(x = 1.77, y = 61, xend = 2.22, yend = 61)) + annotate(geom="text", x=2, y=63, label="n.s.") +
+  geom_segment(aes(x = 2.77, y = 61, xend = 3.22, yend = 61)) + annotate(geom="text", x=3, y=62, label="**") +
+  geom_segment(aes(x = 0.77, y = 65, xend = 1.77, yend = 65)) + annotate(geom="text", x=1.27, y=66, label="***") +
+  geom_segment(aes(x = 1.22, y = 69, xend = 2.22, yend = 69)) + annotate(geom="text", x=1.72, y=71, label="n.s.") +
+  geom_segment(aes(x = 1.22, y = 73, xend = 3.22, yend = 73)) + annotate(geom="text", x=2.22, y=74, label="***") +
+  scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
+  scale_color_manual(values = pal_jco()(10)[c(5,2)],guide="none")
+```

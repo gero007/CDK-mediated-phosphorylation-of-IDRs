@@ -9,12 +9,21 @@ J.M. Valverde & G. Dubra
     - [d](#d)
     - [e](#e)
     - [f](#f)
+  - [Fig. 4](#fig-4)
+    - [a](#a)
+  - [Fig. 6](#fig-6)
+    - [c](#c-1)
+    - [d](#d-1)
+  - [Fig. 7](#fig-7)
+    - [c](#c-2)
 - [Supplemental information](#supplemental-information)
   - [Comparing predictors](#comparing-predictors)
   - [Supp. Fig. 5](#supp-fig-5)
-    - [a](#a)
-    - [d](#d-1)
+    - [a](#a-1)
+    - [d](#d-2)
     - [e](#e-1)
+  - [Supp. Fig. 7](#supp-fig-7)
+    - [Deleted LR domain](#deleted-lr-domain)
 
 This repository provides the source code and data for all the analyses
 performed in the publication “A Cyclin dependent kinase-mediated
@@ -286,6 +295,141 @@ code used in the paper is recompiled.
 
 ![](README_files/figure-gfm/post-hoc%20test%20for%20all%20kinases%20disorder%20percentage-3.png)<!-- -->
 
+## Fig. 4
+
+### a
+
+![](README_files/figure-gfm/CDK%20targets%20and%20Dynamic%20phosphoproteins%20in%20MLOs-1.png)<!-- -->
+\### b
+
+#### Human
+
+![](README_files/figure-gfm/IUpred%20scores%20-%20human%20-1.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20human%20-2.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20human%20-3.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20human%20-4.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20human%20-5.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20human%20-6.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20human%20-7.png)<!-- -->
+
+#### Xenopus
+
+![](README_files/figure-gfm/IUpred%20scores%20-%20xenopus%20-1.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20xenopus%20-2.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20xenopus%20-3.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20xenopus%20-4.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20xenopus%20-5.png)<!-- -->![](README_files/figure-gfm/IUpred%20scores%20-%20xenopus%20-6.png)<!-- -->
+
+## Fig. 6
+
+### c
+
+#### Interphase
+
+![](README_files/figure-gfm/FRAP%20modelling%20-%20interphase%20-1.png)<!-- -->
+
+#### Interphase (high expression)
+
+![](README_files/figure-gfm/FRAP%20modelling%20-%20interphase%20(High%20expression)%20-1.png)<!-- -->
+
+#### Mitosis
+
+![](README_files/figure-gfm/FRAP%20modelling%20-%20mitosis-1.png)<!-- -->
+
+### d
+
+![](README_files/figure-gfm/FRAP%20quantification%20-1.png)<!-- -->
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  thalf by group
+    ## W = 18.5, p-value = 0.1232
+    ## alternative hypothesis: true location shift is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -13.370047   1.150055
+    ## sample estimates:
+    ## difference in location 
+    ##              -4.977137
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  thalf by group
+    ## W = 0, p-value = 0.01421
+    ## alternative hypothesis: true location shift is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -23.110004  -6.819955
+    ## sample estimates:
+    ## difference in location 
+    ##              -15.94311
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  thalf by group
+    ## W = 15, p-value = 0.008276
+    ## alternative hypothesis: true location shift is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -15.209962  -5.260037
+    ## sample estimates:
+    ## difference in location 
+    ##              -11.23145
+
+![](README_files/figure-gfm/FRAP%20quantification%20-2.png)<!-- -->
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  percent by group
+    ## W = 73, p-value = 0.005126
+    ## alternative hypothesis: true location shift is not equal to 0
+    ## 95 percent confidence interval:
+    ##  11.17000 45.76001
+    ## sample estimates:
+    ## difference in location 
+    ##               27.58075
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  percent by group
+    ## W = 24, p-value = 0.01421
+    ## alternative hypothesis: true location shift is not equal to 0
+    ## 95 percent confidence interval:
+    ##  17.58995 51.27007
+    ## sample estimates:
+    ## difference in location 
+    ##                30.0655
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  percent by group
+    ## W = 66, p-value = 0.5885
+    ## alternative hypothesis: true location shift is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -10.63997  17.64000
+    ## sample estimates:
+    ## difference in location 
+    ##               2.790034
+
+## Fig. 7
+
+### c
+
+    ## 
+    ##  Kruskal-Wallis rank sum test
+    ## 
+    ## data:  Foci_Nucleus by Treat_collapsed
+    ## Kruskal-Wallis chi-squared = 205.15, df = 5, p-value < 2.2e-16
+
+    ## 
+    ##  Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
+    ## 
+    ## data:  Full_length_quant$Foci_Nucleus and Full_length_quant$Treat_collapsed 
+    ## 
+    ##         DMSO L- DMSO L+ OA L-   OA L+   PA L- 
+    ## DMSO L+ 2.1e-14 -       -       -       -     
+    ## OA L-   5.3e-11 0.0230  -       -       -     
+    ## OA L+   8.6e-14 0.3149  0.1860  -       -     
+    ## PA L-   7.0e-05 < 2e-16 < 2e-16 < 2e-16 -     
+    ## PA L+   0.6424  2.0e-15 1.8e-11 2.1e-14 0.0011
+    ## 
+    ## P value adjustment method: BH
+
+![](README_files/figure-gfm/optodroplet%20quantification%20-%20FL%20-1.png)<!-- -->
+
 # Supplemental information
 
 ## Comparing predictors
@@ -319,7 +463,56 @@ methods
 
 ### e
 
-Calculate the porcentage of disorder of human CDK targets vs the rest of
-the phosphoproteome with all available predictors
+Calculate the porcentage of disorder of yeast and human CDK targets vs
+the rest of the phosphoproteome with all available predictors
 
 ![](README_files/figure-gfm/human%20disorder%20percentage%20for%20all%20predictors%20-1.png)<!-- -->![](README_files/figure-gfm/human%20disorder%20percentage%20for%20all%20predictors%20-2.png)<!-- -->
+
+## Supp. Fig. 7
+
+### Deleted LR domain
+
+    ## 
+    ##  Kruskal-Wallis rank sum test
+    ## 
+    ## data:  Foci_Nucleus by Treat_collapsed
+    ## Kruskal-Wallis chi-squared = 204.5, df = 5, p-value < 2.2e-16
+
+    ## 
+    ##  Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
+    ## 
+    ## data:  dLR_quant$Foci_Nucleus and dLR_quant$Treat_collapsed 
+    ## 
+    ##         DMSO L- DMSO L+ OA L-   OA L+   PA L- 
+    ## DMSO L+ < 2e-16 -       -       -       -     
+    ## OA L-   2.3e-05 1.5e-10 -       -       -     
+    ## OA L+   < 2e-16 0.8143  2.9e-09 -       -     
+    ## PA L-   0.7618  < 2e-16 2.9e-05 < 2e-16 -     
+    ## PA L+   0.3916  < 2e-16 0.0014  8.9e-16 0.5839
+    ## 
+    ## P value adjustment method: BH
+
+![](README_files/figure-gfm/optodroplet%20quantification%20-%20dLR%20-1.png)<!-- -->
+\### Deleted N-terminus (Repeats + LR)
+
+    ## 
+    ##  Kruskal-Wallis rank sum test
+    ## 
+    ## data:  Foci_Nucleus by Treat_collapsed
+    ## Kruskal-Wallis chi-squared = 204.5, df = 5, p-value < 2.2e-16
+
+    ## 
+    ##  Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
+    ## 
+    ## data:  Repeats_LR_quant$Foci_Nucleus and Repeats_LR_quant$Treat_collapsed 
+    ## 
+    ##         DMSO L- DMSO L+ OA L-   OA L+   PA L-  
+    ## DMSO L+ 8.0e-09 -       -       -       -      
+    ## OA L-   0.032   4.4e-05 -       -       -      
+    ## OA L+   1.4e-09 0.341   3.3e-06 -       -      
+    ## PA L-   3.3e-06 < 2e-16 3.0e-11 < 2e-16 -      
+    ## PA L+   0.776   1.4e-09 0.014   2.8e-10 7.7e-06
+    ## 
+    ## P value adjustment method: BH
+
+![](README_files/figure-gfm/optodroplet%20quantification%20-%20Deleted%20N-terminus%20(Repeats%20+%20LR)%20-1.png)<!-- -->
