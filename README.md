@@ -3,14 +3,16 @@ CDK-mediated phosphoryations of IDRs
 J.M. Valverde & G. Dubra
 
 - [Main figures](#main-figures)
+  - [Fig. 1](#fig-1)
+    - [c](#c)
   - [Fig. 2](#fig-2)
     - [b](#b)
-    - [c](#c)
+    - [c](#c-1)
     - [d](#d)
     - [f](#f)
   - [Fig. 3](#fig-3)
     - [b](#b-1)
-    - [c](#c-1)
+    - [c](#c-2)
     - [d](#d-1)
     - [e](#e)
     - [f](#f-1)
@@ -18,10 +20,10 @@ J.M. Valverde & G. Dubra
     - [a](#a)
     - [b](#b-2)
   - [Fig. 6](#fig-6)
-    - [c](#c-2)
+    - [c](#c-3)
     - [d](#d-2)
   - [Fig. 7](#fig-7)
-    - [c](#c-3)
+    - [c](#c-4)
 - [Supplemental information](#supplemental-information)
   - [Comparing predictors](#comparing-predictors)
   - [Supp. Fig. 5](#supp-fig-5)
@@ -41,6 +43,12 @@ generated, using R Studio, from a R markdown (README.Rmd) where all the
 code used in the paper is recompiled.
 
 # Main figures
+
+## Fig. 1
+
+### c
+
+![](README_files/figure-gfm/embryo%20anova%20heatmap-1.png)<!-- -->
 
 ## Fig. 2
 

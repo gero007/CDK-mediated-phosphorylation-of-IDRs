@@ -47,6 +47,8 @@ library(useful)
 library(missForest)
 library(ggbreak)
 library(heatmap3)
+library(tibble)
+
 
 if (file.exists("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")) {
   load("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")
@@ -474,6 +476,26 @@ colnames(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix) <- c('0
 
 rownames(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix) <- pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig[, 68]
 
+library(circlize)
+col_fun = colorRamp2(c(-3, 0, 3), c("cyan", "black", "yellow"))
+
+#Plotting with Complex Heatmap
+#Scaling is needed, not done automatically by Complex HeatMap
+
+pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled <-
+  t(scale(t(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix)))
+
+
+#Heatmap using k-means for clustering
+
+HM <- Heatmap(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled, 
+             column_order = colnames(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix),
+             show_row_names = FALSE, row_km = 4, row_km_repeats = 100, clustering_distance_rows = 'spearman', 
+             clustering_method_rows = 'complete', name = 'Z-Score', col = col_fun,
+             cluster_row_slices = TRUE, border = FALSE, row_dend_width = unit(3, "cm"),
+             show_parent_dend_line = FALSE, column_names_rot = 45)
+
+HM
 
 #Extracting row clusters
 #From https://github.com/jokergoo/ComplexHeatmap/issues/136
@@ -685,24 +707,7 @@ pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v5 <- subset(pSites_Median_Norm_Fu
 #checking properties of the data frame
 
 
-library(circlize)
-col_fun = colorRamp2(c(-3, 0, 3), c("cyan", "black", "yellow"))
 
-#Plotting with Complex Heatmap
-#Scaling is needed, not done automatically by Complex HeatMap
-
-pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled <-
-  t(scale(t(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix)))
-
-
-#Heatmap using k-means for clustering
-
-Heatmap(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled, 
-             column_order = colnames(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix),
-             show_row_names = FALSE, row_km = 4, row_km_repeats = 100, clustering_distance_rows = 'spearman', 
-             clustering_method_rows = 'complete', name = 'Z-Score', col = col_fun,
-             cluster_row_slices = TRUE, border = FALSE, row_dend_width = unit(3, "cm"),
-             show_parent_dend_line = FALSE, column_names_rot = 45)
 
 
 
