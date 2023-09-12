@@ -46,6 +46,7 @@ library(ComplexHeatmap)
 library(useful)
 library(missForest)
 library(ggbreak)
+library(heatmap3)
 
 if (file.exists("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")) {
   load("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")
@@ -427,6 +428,286 @@ save.image("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")}
 ```
 
 # Main figures
+
+## Fig. 1
+
+### c 
+
+```{r embryo anova heatmap,echo=FALSE,message=FALSE,warning=FALSE,fig.height=7,fig.width=6}
+
+#Load data 
+
+pSites_Median_Norm_Full_Matrix <- read.csv('phosphorylation_data/Valverde_data/All_pSites_ANOVA_Statistics.csv', stringsAsFactors = F)
+
+
+#Creating unique useful identifier
+
+pSites_Median_Norm_Full_Matrix_Unique_ID <- unite(pSites_Median_Norm_Full_Matrix, 
+                                                  'Protein_Amino.acid_Site_NumberPhospho', 
+                                                  c('Proteins', 'Amino.acid', 'Positions.within.proteins', 'Multiplicity'),
+                                                  sep ='|', remove = FALSE)
+
+#filtering for ANOVA +
+
+pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig <- 
+  pSites_Median_Norm_Full_Matrix_Unique_ID[pSites_Median_Norm_Full_Matrix_Unique_ID$ANOVA.Significant == '+', ] 
+
+#Df with only mean intensities
+
+pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean <- 
+  pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig[, c(86:103)]
+
+
+#Preparing data
+#Transforming to matrix
+
+pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix <-
+  as.matrix(sapply(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean, as.numeric))
+
+#Changing column names
+
+colnames(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix) <- c('0h00', '0h15','0h30','0h45','1h00','1h15','1h25',
+                                                                              '1h45','1h50','1h55','2h05','2h20','2h30','2h50',
+                                                                              '3h00','3h10','3h20','3h35')
+
+#Changing rownames
+
+rownames(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix) <- pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig[, 68]
+
+
+#Extracting row clusters
+#From https://github.com/jokergoo/ComplexHeatmap/issues/136
+
+r.dend <- row_dend(HM)  #Extract row dendrogram
+rcl.list <- row_order(HM)  #Extract clusters (output is a list)
+
+# loop to extract genes for each cluster.
+for (i in 1:length(row_order(HM))){
+  if (i == 1) {
+    clu <- t(t(row.names(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled[row_order(HM)[[i]],])))
+    out <- cbind(clu, paste("cluster", i, sep=""))
+    colnames(out) <- c("ID", "Cluster")
+  } else {
+    clu <- t(t(row.names(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled[row_order(HM)[[i]],])))
+    clu <- cbind(clu, paste("cluster", i, sep=""))
+    out <- rbind(out, clu)
+  }
+}
+
+
+#Matching cluster to identifier in scaled matrix
+#transforming matrices to data frames in order to use merge
+
+pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled_df <- as.data.frame(
+  pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled)
+
+out_df <- as.data.frame(out)
+
+#rownames to column to use merge
+
+pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled_df_ready <- 
+  pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled_df %>% rownames_to_column('ID')
+
+#merging
+
+pSites_with_clusters_fromHM_Scaled <- merge(x = pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled_df_ready,
+                                            y = out_df, by.x = 'ID', by.y = 'ID')
+
+#writing table to use scaled intensities in single line plots of phosphoproteome
+
+#Filtering based on cluster to get data frame for each cluster
+
+Cluster1 <- pSites_with_clusters_fromHM_Scaled[pSites_with_clusters_fromHM_Scaled$Cluster == 'cluster1', ]
+
+Cluster2 <- pSites_with_clusters_fromHM_Scaled[pSites_with_clusters_fromHM_Scaled$Cluster == 'cluster2', ]
+
+Cluster3 <- pSites_with_clusters_fromHM_Scaled[pSites_with_clusters_fromHM_Scaled$Cluster == 'cluster3', ]
+
+Cluster4 <- pSites_with_clusters_fromHM_Scaled[pSites_with_clusters_fromHM_Scaled$Cluster == 'cluster4', ]
+
+#transforming to matrix
+
+Cluster1_matrix <- data.matrix(Cluster1)
+rownames(Cluster1_matrix) <- Cluster1[, 1]
+Cluster1_matrix <- Cluster1_matrix[, -c(1, 20)]
+
+
+Cluster2_matrix <- data.matrix(Cluster2)
+rownames(Cluster2_matrix) <- Cluster2[, 1]
+Cluster2_matrix <- Cluster2_matrix[, -c(1, 20)]
+
+Cluster3_matrix <- data.matrix(Cluster3)
+rownames(Cluster3_matrix) <- Cluster3[, 1]
+Cluster3_matrix <- Cluster3_matrix[, -c(1, 20)]
+
+Cluster4_matrix <- data.matrix(Cluster4)
+rownames(Cluster4_matrix) <- Cluster4_matrix[, 1]
+Cluster4_matrix <- Cluster4_matrix[, -c(1, 20)]
+
+#Matching cluster to identifier in full matrix, in order to transform data to visualize with ggplot
+
+pSites_with_clusters_fromHM <- merge(x = pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig, 
+                                     y = out, by.x = 'Protein_Amino.acid_Site_NumberPhospho', by.y = 'ID')
+
+#Tidying up the data
+#Leaving only per replicate normalized intensities with valuable information for plotting
+#ANOVA
+pSites_with_clusters_fromHM_tidy <- pSites_with_clusters_fromHM[, c(1:53, 69, 279:281, 285)]
+
+#All
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy <- pSites_Median_Norm_Full_Matrix_Unique_ID[, c(1:52, 68, 69, 74, 279:281)]
+
+#Changing colnames
+#ANOVA
+
+pSites_with_clusters_fromHM_tidy_v1 <- plyr::rename(pSites_with_clusters_fromHM_tidy, 
+                                                    c('X00A' = '0h00_RepA', 'X00B' = '0h00_RepB', 'X00C' = '0h00_RepC',
+                                                      'X01A' = '0h15_RepA', 'X01B' = '0h15_RepB',
+                                                      'X02A' = '0h30_RepA', 'X02B' = '0h30_RepB', 'X02C' = '0h30_RepC',
+                                                      'X03B' = '0h45_RepA', 'X03C' = '0h45_RepC',
+                                                      'X04A' = '1h00_RepA', 'X04B' = '1h00_RepB', 'X04C' = '1h00_RepC',
+                                                      'X04.5A' = '1h15_RepA', 'X04.5B' = '1h15_RepB', 'X04.5C' = '1h15_RepC',
+                                                      'X05A' = '1h25_RepA', 'X05B' = '1h25_RepB', 'X05C' = '1h25_RepC',
+                                                      'X06A' = '1h45_RepA', 'X06B' = '1h45_RepB', 'X06C' = '1h45_RepC',
+                                                      'X07A'= '1h50_RepA', 'X07B' = '1h50_RepB', 'X07C' = '1h50_RepC',
+                                                      'X08A' = '1h55_RepA', 'X08B' = '1h55_RepB', 'X08C' = '1h55_RepC',
+                                                      'X09A' = '2h05_RepA', 'X09B' = '2h05_RepB', 'X09C' = '2h05_RepC',
+                                                      'X10A' = '2h20_RepA', 'X10B' = '2h20_RepB', 'X10C' = '2h20_RepC',
+                                                      'X11A' = '2h30_RepA', 'X11B' = '2h30_RepB', 'X11C' = '2h30_RepC',
+                                                      'X12A' = '2h50_RepA', 'X12B' = '2h50_RepB', 'X12C' = '2h50_RepC',
+                                                      'X13A' = '3h00_RepA', 'X13B' = '3h00_RepB', 'X13C' = '3h00_RepC',
+                                                      'X14A' = '3h10_RepA', 'X14B' = '3h10_RepB', 'X14C' = '3h10_RepC',
+                                                      'X15A' = '3h20_RepA', 'X15B' = '3h20_RepB', 'X15C' = '3h20_RepC',
+                                                      'X16A' = '3h35_RepA', 'X16B' = '3h35_RepB', 'X16C' = '3h35_RepC',
+                                                      'Protein_Amino.acid_Site_NumberPhospho' = 'ID'))
+
+#All
+
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v1 <- plyr::rename(pSites_Median_Norm_Full_Matrix_Unique_ID_tidy, 
+                                                                 c('X00A' = '0h00_RepA', 'X00B' = '0h00_RepB', 'X00C' = '0h00_RepC',
+                                                                   'X01A' = '0h15_RepA', 'X01B' = '0h15_RepB',
+                                                                   'X02A' = '0h30_RepA', 'X02B' = '0h30_RepB', 'X02C' = '0h30_RepC',
+                                                                   'X03B' = '0h45_RepA', 'X03C' = '0h45_RepC',
+                                                                   'X04A' = '1h00_RepA', 'X04B' = '1h00_RepB', 'X04C' = '1h00_RepC',
+                                                                   'X04.5A' = '1h15_RepA', 'X04.5B' = '1h15_RepB', 'X04.5C' = '1h15_RepC',
+                                                                   'X05A' = '1h25_RepA', 'X05B' = '1h25_RepB', 'X05C' = '1h25_RepC',
+                                                                   'X06A' = '1h45_RepA', 'X06B' = '1h45_RepB', 'X06C' = '1h45_RepC',
+                                                                   'X07A'= '1h50_RepA', 'X07B' = '1h50_RepB', 'X07C' = '1h50_RepC',
+                                                                   'X08A' = '1h55_RepA', 'X08B' = '1h55_RepB', 'X08C' = '1h55_RepC',
+                                                                   'X09A' = '2h05_RepA', 'X09B' = '2h05_RepB', 'X09C' = '2h05_RepC',
+                                                                   'X10A' = '2h20_RepA', 'X10B' = '2h20_RepB', 'X10C' = '2h20_RepC',
+                                                                   'X11A' = '2h30_RepA', 'X11B' = '2h30_RepB', 'X11C' = '2h30_RepC',
+                                                                   'X12A' = '2h50_RepA', 'X12B' = '2h50_RepB', 'X12C' = '2h50_RepC',
+                                                                   'X13A' = '3h00_RepA', 'X13B' = '3h00_RepB', 'X13C' = '3h00_RepC',
+                                                                   'X14A' = '3h10_RepA', 'X14B' = '3h10_RepB', 'X14C' = '3h10_RepC',
+                                                                   'X15A' = '3h20_RepA', 'X15B' = '3h20_RepB', 'X15C' = '3h20_RepC',
+                                                                   'X16A' = '3h35_RepA', 'X16B' = '3h35_RepB', 'X16C' = '3h35_RepC',
+                                                                   'Protein_Amino.acid_Site_NumberPhospho' = 'ID'))
+
+
+#changing several columns to factors
+
+#ANOVA
+pSites_with_clusters_fromHM_tidy_v1$Amino.acid <- as.factor(pSites_with_clusters_fromHM_tidy_v1[, 'Amino.acid'])
+pSites_with_clusters_fromHM_tidy_v1$Leading.proteins <- as.factor(pSites_with_clusters_fromHM_tidy_v1[, 'Leading.proteins'])
+pSites_with_clusters_fromHM_tidy_v1$Protein <- as.factor(pSites_with_clusters_fromHM_tidy_v1[, 'Protein'])
+pSites_with_clusters_fromHM_tidy_v1$Cluster <- as.factor(pSites_with_clusters_fromHM_tidy_v1[, 'Cluster'])
+
+#All
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v1$Amino.acid <- as.factor(pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v1[, 'Amino.acid'])
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v1$Leading.proteins <- as.factor(pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v1[, 'Leading.proteins'])
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v1$Protein <- as.factor(pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v1[, 'Protein'])
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v1$ANOVA.Significant <- as.factor(pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v1[, 'ANOVA.Significant'])
+
+#From wide format to long format
+
+#ANOVA
+pSites_with_clusters_fromHM_tidy_v2 <- melt(pSites_with_clusters_fromHM_tidy_v1)
+
+#All
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v2 <- melt(pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v1)
+
+#Separate Time and replicate
+
+#ANOVA
+pSites_with_clusters_fromHM_tidy_v3 <- pSites_with_clusters_fromHM_tidy_v2 %>%
+  separate(variable, c('Time', 'Replicate'), '_')
+
+#All
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v3 <- pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v2 %>%
+  separate(variable, c('Time', 'Replicate'), '_')
+
+#Separate Time into hours and minutes
+
+#ANOVA
+pSites_with_clusters_fromHM_tidy_v4 <- pSites_with_clusters_fromHM_tidy_v3 %>%
+  separate(Time, c('Hours', 'Minutes'), 'h')
+
+#All
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4 <- pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v3 %>%
+  separate(Time, c('Hours', 'Minutes'), 'h')
+
+#Converting hours and minutes to numeric
+
+#ANOVA
+pSites_with_clusters_fromHM_tidy_v4$Hours <- as.numeric(pSites_with_clusters_fromHM_tidy_v4$Hours)
+pSites_with_clusters_fromHM_tidy_v4$Minutes <- as.numeric(pSites_with_clusters_fromHM_tidy_v4$Minutes)
+
+#All
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4$Hours <- as.numeric(pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4$Hours)
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4$Minutes <- as.numeric(pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4$Minutes)
+
+#multiplying hours time 60 to get minutes
+
+#ANOVA
+pSites_with_clusters_fromHM_tidy_v4$HoursX60 <- pSites_with_clusters_fromHM_tidy_v4$Hours*60
+
+#All
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4$HoursX60 <- pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4$Hours*60
+
+#Adding all minutes to get final time
+
+#ANOVA
+pSites_with_clusters_fromHM_tidy_v4$Time <- pSites_with_clusters_fromHM_tidy_v4$HoursX6 + 
+  pSites_with_clusters_fromHM_tidy_v4$Minutes
+
+#All
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4$Time <- pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4$HoursX60 + 
+  pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4$Minutes
+
+#Tidying up the data frame: removing unwanted columns
+
+#ANOVA
+pSites_with_clusters_fromHM_tidy_v5 <- subset(pSites_with_clusters_fromHM_tidy_v4, select = -c(HoursX60, Hours, Minutes))
+
+#All
+pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v5 <- subset(pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v4, select = -c(HoursX60, Hours, Minutes))
+#checking properties of the data frame
+
+
+library(circlize)
+col_fun = colorRamp2(c(-3, 0, 3), c("cyan", "black", "yellow"))
+
+#Plotting with Complex Heatmap
+#Scaling is needed, not done automatically by Complex HeatMap
+
+pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled <-
+  t(scale(t(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix)))
+
+
+#Heatmap using k-means for clustering
+
+Heatmap(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix_Scaled, 
+             column_order = colnames(pSites_Median_Norm_Full_Matrix_Unique_ID_ANOVA_sig_Mean_Matrix),
+             show_row_names = FALSE, row_km = 4, row_km_repeats = 100, clustering_distance_rows = 'spearman', 
+             clustering_method_rows = 'complete', name = 'Z-Score', col = col_fun,
+             cluster_row_slices = TRUE, border = FALSE, row_dend_width = unit(3, "cm"),
+             show_parent_dend_line = FALSE, column_names_rot = 45)
+
+
+
+```
+
 
 ## Fig. 2
 
