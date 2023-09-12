@@ -58,6 +58,8 @@ code used in the paper is recompiled.
 
 ### f
 
+![](README_files/figure-gfm/single%20psites%20-%20CDK1%20network%20oscillating-1.png)<!-- -->![](README_files/figure-gfm/single%20psites%20-%20CDK1%20network%20oscillating-2.png)<!-- -->![](README_files/figure-gfm/single%20psites%20-%20CDK1%20network%20oscillating-3.png)<!-- -->
+
 ## Fig. 3
 
 ### b

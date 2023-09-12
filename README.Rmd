@@ -760,7 +760,7 @@ ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_000299|cdk1a")
 
 ### f
 
-```{r single psites - CDK1 network oscillating,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5,eval=FALSE}
+```{r single psites - CDK1 network oscillating,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5}
 
 #Plotting 
 
