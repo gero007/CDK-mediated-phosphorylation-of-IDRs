@@ -2,25 +2,18 @@ CDK-mediated phosphoryations of IDRs
 ================
 J.M. Valverde & G. Dubra
 
-This repository provides the source code and data for all the analyses
-performed in the publication “A Cyclin dependent kinase-mediated
-phosphorylation switch of disordered protein condensation” (Valverde,
-Dubra et al., 2023). This current GitHub readme file was automaticaly
-generated, using R Studio, from a R markdown (README.Rmd) where all the
-code used in the paper is recompiled.
-
 - [Main figures](#main-figures)
   - [Fig. 2](#fig-2)
     - [b](#b)
     - [c](#c)
     - [d](#d)
-    - [e](#e)
+    - [f](#f)
   - [Fig. 3](#fig-3)
     - [b](#b-1)
     - [c](#c-1)
     - [d](#d-1)
-    - [e](#e-1)
-    - [f](#f)
+    - [e](#e)
+    - [f](#f-1)
   - [Fig. 4](#fig-4)
     - [a](#a)
     - [b](#b-2)
@@ -34,12 +27,18 @@ code used in the paper is recompiled.
   - [Supp. Fig. 5](#supp-fig-5)
     - [a](#a-1)
     - [d](#d-3)
-    - [e](#e-2)
+    - [e](#e-1)
   - [Supp. Fig. 7](#supp-fig-7)
     - [Deleted LR domain](#deleted-lr-domain)
     - [Deleted N-terminus (Repeats +
       LR)](#deleted-n-terminus-repeats--lr)
 
+This repository provides the source code and data for all the analyses
+performed in the publication “A Cyclin dependent kinase-mediated
+phosphorylation switch of disordered protein condensation” (Valverde,
+Dubra et al., 2023). This current GitHub readme file was automaticaly
+generated, using R Studio, from a R markdown (README.Rmd) where all the
+code used in the paper is recompiled.
 
 # Main figures
 
@@ -57,7 +56,7 @@ code used in the paper is recompiled.
 
 ![](README_files/figure-gfm/single%20psites%20-%20CDK1%20Y15-1.png)<!-- -->
 
-### e
+### f
 
 ## Fig. 3
 

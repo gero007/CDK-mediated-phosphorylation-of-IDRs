@@ -601,7 +601,7 @@ Heatmap(PeptideRatioResults_Wide_Complete_AsMatrix_Zscored, column_order = colna
 ### c
 
 ```{r single psites - biological processes ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=6,fig.width=5}
-PeptideRatioResults <- read.csv('~/Downloads/JuanScripts/Peptide Ratio Results.csv', stringsAsFactors = FALSE)
+PeptideRatioResults <- read.csv('phosphorylation_data/Valverde_data/Peptide_Ratio_Results.csv', stringsAsFactors = FALSE)
 
 #Remove iRT peptides#
 
@@ -740,17 +740,17 @@ w + scale_x_break(c(35, 57), scales = 4, space = 0.5)
 
 ```{r single psites - CDK1 Y15,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=6}
 
-ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_000299|cdk1a")), aes(x = TimeMinutes, y = exp(RatioLightToHeavy), color = Peptide.Modified.Sequence))+
-  geom_point(size = 6)+
+ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_000299|cdk1a")), aes(x = TimeMinutes, y = 2^RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 4)+
   scale_color_manual(values = c("dodgerblue2"))+
-  geom_point(colour = 'white', size = 2)+
+  geom_point(colour = 'white', size = 1)+
   geom_line(subset(PeptideRatioResults_NoMVS_mean, Peptide.Modified.Sequence %in% c("IGEGTY[+80]GVVYK")), 
-            mapping = aes(x = TimeMinutes, y = exp(average)), size = 1) +
+            mapping = aes(x = TimeMinutes, y = 2^average), size = 1) +
   ggtitle("Cdk1 - Y15")+
   geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
   geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
   theme_bw() + 
-  scale_y_continuous(breaks = c(0.00025,0.00050,0.00075,0.01), limits = c(0, 0.001))+
+  # scale_y_continuous(breaks = c(0.00025,0.00050,0.00075,0.01), limits = c(0, 0.001))+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black", size = 0.5),
        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none',
        panel.border = element_rect(colour = "black", fill=NA, size=0.5)) + scale_x_break(c(35, 57), scales = 4, space = 0.5)
@@ -758,142 +758,56 @@ ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_000299|cdk1a")
 
 ```
 
-### e
+### f
 
-```{r single psites - CDK1 network,echo=FALSE,message=FALSE,warning=FALSE,fig.height=6,fig.width=5,eval=FALSE}
+```{r single psites - CDK1 network oscillating,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=5,eval=FALSE}
 
 #Plotting 
 
 
-#Plot with nice aesthetics for manuscript
-#RNA processing
-#Proteins
-#ID_step3_000442|cpe1b
-#ID_step3_008661|g3bp2
-#ID_step3_009676|cnot1
-#ID_step3_007196|pan2
-#Colors 
-#"darkorange", "darkorange3", "#E7B800"
-
-#For Protein
-
-ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_007196|pan2")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
-  geom_point(size = 6)+
-  scale_color_manual(values = c("darkorange", "darkorange3", "#E7B800"))+
-  geom_point(colour = 'white', size = 2)+
-  geom_smooth(method = 'loess', span = 0.4, se = FALSE)+
-  ggtitle("ID_step3_007196|pan2")+
+ggplot(subset(PeptideRatioResults_NoMVS, Peptide.Modified.Sequence %in% c("DAEQS[+80]PAFAYGR")), aes(x = TimeMinutes, y = 2^RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 4)+
+  scale_color_manual(values = c("red3"))+
+  geom_point(colour = 'white', size = 1)+
+  geom_line(subset(PeptideRatioResults_NoMVS_mean, Peptide.Modified.Sequence %in% c("DAEQS[+80]PAFAYGR")), 
+            mapping = aes(x = TimeMinutes, y = 2^average), size = 1) +
+  ggtitle("Cdk1 - Y15")+
   geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
   geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
-  theme_bw()+
-  #scale_y_continuous(breaks = c(-10, -8, -6, -4, -2, 0, 2, 4), limits = c(-10, -1))+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
-        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none')
+  theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black", size = 0.5),
+       axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none',
+       panel.border = element_rect(colour = "black", fill=NA, size=0.5)) + scale_x_break(c(35, 57), scales = 4, space = 0.5) + ggtitle("NIPA - S324")
 
-#For Peptide
 
-ggplot(subset(PeptideRatioResults_NoMVS, Peptide.Modified.Sequence %in% c("VDVKPEAPVHS[+80]PR")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
-  geom_point(size = 6)+
-  scale_color_manual(values = c("darkorange", "darkorange3", "#E7B800"))+
-  geom_point(colour = 'white', size = 2)+
-  geom_smooth(method = 'loess', span = 0.4, se = FALSE)+
-  ggtitle("ID_step3_008661|g3bp2")+
+ggplot(subset(PeptideRatioResults_NoMVS, Peptide.Modified.Sequence %in% c("SYNS[+80]PINVSNVSEPSK")), aes(x = TimeMinutes, y = 2^RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 4)+
+  scale_color_manual(values = c("red3"))+
+  geom_point(colour = 'white', size = 1)+
+  geom_line(subset(PeptideRatioResults_NoMVS_mean, Peptide.Modified.Sequence %in% c("SYNS[+80]PINVSNVSEPSK")), 
+            mapping = aes(x = TimeMinutes, y = 2^average), size = 1) +
+  ggtitle("Cdk1 - Y15")+
   geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
   geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
-  theme_bw()+
-  scale_y_continuous(breaks = c(-10, -8, -6, -4, -2, 0, 2, 4), limits = c(-10, -1))+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
-        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none')
+  theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black", size = 0.5),
+       axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none',
+       panel.border = element_rect(colour = "black", fill=NA, size=0.5)) + scale_x_break(c(35, 57), scales = 4, space = 0.5) + ggtitle("GWL - S677")
 
-#NPC
-#Proteins
-#ID_step3_000682|elys
-#ID_step3_008724|nu107
-#ID_step3_007660|nup98
-#ID_step3_003271|nup53
-#Colors 
-#"deepskyblue1", "deepskyblue4", "#E7B800"
 
-#For Protein
-
-ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_000682|elys")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
-  geom_point(size = 6)+
-  scale_color_manual(values = c("deepskyblue1", "deepskyblue4", "#E7B800"))+
-  geom_point(colour = 'white', size = 2)+
-  geom_smooth(method = 'loess', span = 0.4, se = FALSE)+
-  ggtitle("ID_step3_000682|elys")+
+ggplot(subset(PeptideRatioResults_NoMVS, Peptide.Modified.Sequence %in% c("HLAPMDEAGMLS[+80]PVAELR")), aes(x = TimeMinutes, y = 2^RatioLightToHeavy, color = Peptide.Modified.Sequence))+
+  geom_point(size = 4)+
+  scale_color_manual(values = c("red3"))+
+  geom_point(colour = 'white', size = 1)+
+  geom_line(subset(PeptideRatioResults_NoMVS_mean, Peptide.Modified.Sequence %in% c("HLAPMDEAGMLS[+80]PVAELR")), 
+            mapping = aes(x = TimeMinutes, y = 2^average), size = 1) +
+  ggtitle("Cdk1 - Y15")+
   geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
   geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
-  theme_bw()+
-  scale_y_continuous(breaks = c(-12, -10, -8, -6, -4, -2, 0, 2, 4), limits = c(-12, -2))+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
-        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none')
-
-
-#DNA Replication
-#Proteins
-#ID_step3_007400|cdt1
-#ID_step3_000611|dpola
-#ID_step3_003090|tob1a
-#ID_step3_009358|rif1
-#Colors
-#"darkturquoise", "darkslategray1", "darkslategray3", "darkslategray4"
-
-
-#For Protein
-
-ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_003090|tob1a")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
-  geom_point(size = 6)+
-  scale_color_manual(values = c("darkturquoise", "darkcyan", "darkslategray3", "darkslategray1"))+
-  geom_point(colour = 'white', size = 2)+
-  geom_smooth(method = 'loess', span = 0.4, se = FALSE)+
-  ggtitle("ID_step3_003090|tob1a")+
-  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
-  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
-  theme_bw()+
-  scale_y_continuous(breaks = c(-12, -10, -8, -6, -4, -2, 0, 2, 4))+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
-        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none')
-
-
-#Chromatin remodeling
-#Proteins
-#ID_step3_011947|ep300
-#ID_step3_009741|ari1a
-#ID_step3_010113|kdm3b
-#ID_step3_005468|p66a
-#Colors
-#"darkorchid1", "darkmagenta", "darkorchid4"
-
-ggplot(subset(PeptideRatioResults_NoMVS, Protein %in% c("ID_step3_005468|p66a")), aes(x = TimeMinutes, y = RatioLightToHeavy, color = Peptide.Modified.Sequence))+
-  geom_point(size = 6)+
-  scale_color_manual(values = c("darkorchid1", "darkmagenta", "darkorchid4"))+
-  geom_point(colour = 'white', size = 2)+
-  geom_smooth(method = 'loess', span = 0.4, se = FALSE)+
-  ggtitle("ID_step3_005468|p66a")+
-  geom_vline(xintercept = 85, linetype = "dashed", color = "black", size = 0.5)+
-  geom_vline(xintercept = 118, linetype = "dashed", color = "black", size = 0.5)+
-  theme_bw()+
-  scale_y_continuous(breaks = c(-12, -10, -8, -6, -4, -2, 0, 2, 4))+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), axis.line = element_line(colour = "black", size = 0.5), 
-        axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none')
-
-#Mitosis
-#Proteins
-#ID_step3_000299|cdk1a
-#ID_step3_002536|gwl
-#ID_step3_001469|nipa
-#ID_step3_009637|apc1
-#	ID_step3_002025|smc4
-#Colors
-#"firebrick2", "firebrick", "#E7B800"
-#"dodgerblue2"
-
-
-
-#Line plot as suggested by Daniel for paper
-
-#Creat df with mean values
+  theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black", size = 0.5),
+       axis.text.x = element_text(face="bold", size = 12), axis.text.y = element_text(face="bold", size = 12), legend.position = 'none',
+       panel.border = element_rect(colour = "black", fill=NA, size=0.5)) + scale_x_break(c(35, 57), scales = 4, space = 0.5) + ggtitle("APC1 - S558")
 
 
 
