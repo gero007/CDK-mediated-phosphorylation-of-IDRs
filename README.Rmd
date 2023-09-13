@@ -48,6 +48,7 @@ library(missForest)
 library(ggbreak)
 library(heatmap3)
 library(tibble)
+library(forcats)
 
 
 if (file.exists("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")) {
@@ -2092,6 +2093,127 @@ IupredXenopus <- IUpredScoresPlotGenerator(subset(all_predictions_phospho,ID %in
 
 ## Fig. 6
 
+
+### b
+
+```{r ki67 microscopy ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=7}
+
+#==========================================H3K9me3=========================================================#
+
+# Low Ki-67 expression
+DAPI_for_H3K9me3_low <- read_csv("ki67_microscopy_data/Krasinska_data/DAPI for H3K9me3 low.csv")
+DAPI_for_H3K9me3_low$channel <- rep("DAPI",nrow(DAPI_for_H3K9me3_low))
+DAPI_for_H3K9me3_low$scaled_intensity <- rescale(DAPI_for_H3K9me3_low$Y)
+GFP_for_H3K9me3_low <- read_csv("ki67_microscopy_data/Krasinska_data/GFP for H3K9me3 low.csv")
+GFP_for_H3K9me3_low$channel <- rep("GFP-Ki-67",nrow(GFP_for_H3K9me3_low))
+GFP_for_H3K9me3_low$scaled_intensity <- rescale(GFP_for_H3K9me3_low$Y)
+RED_for_H3K9me3_low <- read_csv("ki67_microscopy_data/Krasinska_data/red for H3K9me3 low.csv")
+RED_for_H3K9me3_low$channel <- rep("H3K9me3",nrow(RED_for_H3K9me3_low))
+RED_for_H3K9me3_low$scaled_intensity <- rescale(RED_for_H3K9me3_low$Y)
+
+merge_for_H3K9me3_low <- rbind(DAPI_for_H3K9me3_low,GFP_for_H3K9me3_low,RED_for_H3K9me3_low)
+colnames(merge_for_H3K9me3_low)[1:2] <- c("distance","intensity")
+
+
+# High Ki-67 expression
+DAPI_for_H3K9me3_high <- read_csv("ki67_microscopy_data/Krasinska_data/DAPI for H3K9me3 high.csv")
+DAPI_for_H3K9me3_high$channel <- rep("DAPI",nrow(DAPI_for_H3K9me3_high))
+DAPI_for_H3K9me3_high$scaled_intensity <- rescale(DAPI_for_H3K9me3_high$Y)
+GFP_for_H3K9me3_high <- read_csv("ki67_microscopy_data/Krasinska_data/GFP for H3K9me3 high.csv")
+GFP_for_H3K9me3_high$channel <- rep("GFP-Ki-67",nrow(GFP_for_H3K9me3_high))
+GFP_for_H3K9me3_high$scaled_intensity <- rescale(GFP_for_H3K9me3_high$Y)
+RED_for_H3K9me3_high <- read_csv("ki67_microscopy_data/Krasinska_data/red for H3K9me3 high.csv")
+RED_for_H3K9me3_high$channel <- rep("H3K9me3",nrow(RED_for_H3K9me3_high))
+RED_for_H3K9me3_high$scaled_intensity <- rescale(RED_for_H3K9me3_high$Y)
+
+merge_for_H3K9me3_high <- rbind(DAPI_for_H3K9me3_high,GFP_for_H3K9me3_high,RED_for_H3K9me3_high)
+colnames(merge_for_H3K9me3_high)[1:2] <- c("distance","intensity")
+
+#==========================================MeCP2=========================================================#
+
+# Low Ki-67 expression
+DAPI_for_MeCP2_low <- read_csv("ki67_microscopy_data/Krasinska_data/DAPI for MeCP2 low.csv")
+DAPI_for_MeCP2_low$channel <- rep("DAPI",nrow(DAPI_for_MeCP2_low))
+DAPI_for_MeCP2_low$scaled_intensity <- rescale(DAPI_for_MeCP2_low$Y)
+GFP_for_MeCP2_low <- read_csv("ki67_microscopy_data/Krasinska_data/GFP for MeCP2 low.csv")
+GFP_for_MeCP2_low$channel <- rep("GFP-Ki-67",nrow(GFP_for_MeCP2_low))
+GFP_for_MeCP2_low$scaled_intensity <- rescale(GFP_for_MeCP2_low$Y)
+RED_for_MeCP2_low <- read_csv("ki67_microscopy_data/Krasinska_data/red for MeCP2 low.csv")
+RED_for_MeCP2_low$channel <- rep("MeCP2",nrow(RED_for_MeCP2_low))
+RED_for_MeCP2_low$scaled_intensity <- rescale(RED_for_MeCP2_low$Y)
+
+merge_for_MeCP2_low <- rbind(DAPI_for_MeCP2_low,GFP_for_MeCP2_low,RED_for_MeCP2_low)
+colnames(merge_for_MeCP2_low)[1:2] <- c("distance","intensity")
+
+# High Ki-67 expression
+DAPI_for_MeCP2_high <- read_csv("ki67_microscopy_data/Krasinska_data/DAPI for MeCP2 high.csv")
+DAPI_for_MeCP2_high$channel <- rep("DAPI",nrow(DAPI_for_MeCP2_high))
+DAPI_for_MeCP2_high$scaled_intensity <- rescale(DAPI_for_MeCP2_high$Y)
+GFP_for_MeCP2_high <- read_csv("ki67_microscopy_data/Krasinska_data/GFP for MeCP2 high.csv")
+GFP_for_MeCP2_high$channel <- rep("GFP-Ki-67",nrow(GFP_for_MeCP2_high))
+GFP_for_MeCP2_high$scaled_intensity <- rescale(GFP_for_MeCP2_high$Y)
+RED_for_MeCP2_high <- read_csv("ki67_microscopy_data/Krasinska_data/red for MeCP2 high.csv")
+RED_for_MeCP2_high$channel <- rep("MeCP2",nrow(RED_for_MeCP2_high))
+RED_for_MeCP2_high$scaled_intensity <- rescale(RED_for_MeCP2_high$Y)
+
+merge_for_MeCP2_high <- rbind(DAPI_for_MeCP2_high,GFP_for_MeCP2_high,RED_for_MeCP2_high)
+colnames(merge_for_MeCP2_high)[1:2] <- c("distance","intensity")
+
+# Low Ki-67 expression
+
+ggplot(merge_for_H3K9me3_low, aes(x=distance,y=scaled_intensity)) + 
+    geom_line(aes(color=channel),size=1.5) +
+    theme_classic() +
+    theme(legend.title=element_blank(),
+          text = element_text(size=20),
+          axis.line.x.bottom=element_line(linewidth = 1.1),
+          axis.line.y.left=element_line(linewidth = 1.1)
+          ) +
+    scale_color_manual(values=c("#3753a4ff","#3eb649ff","#ee2e2eff"),labels=c("DAPI","GFP-Ki67","H3K9me3"))
+
+
+# High Ki-67 expression
+
+ggplot(merge_for_H3K9me3_high, aes(x=distance,y=scaled_intensity)) + 
+    geom_line(aes(color=channel),size=1.5) +
+    theme_classic() +
+    theme(legend.title=element_blank(),
+          text = element_text(size=20),
+          axis.line.x.bottom=element_line(linewidth = 1.1),
+          axis.line.y.left=element_line(linewidth = 1.1)
+          ) +
+    scale_color_manual(values=c("#3753a4ff","#3eb649ff","#ee2e2eff"),labels=c("DAPI","GFP-Ki67","H3K9me3"))
+
+
+#==========================================MeCP2=========================================================#
+
+# Low Ki-67 expression
+ggplot(merge_for_MeCP2_low, aes(x=distance,y=scaled_intensity)) + 
+    geom_line(aes(color=channel),size=1.5) +
+    theme_classic() +
+    theme(legend.title=element_blank(),
+          text = element_text(size=20),
+          axis.line.x.bottom=element_line(linewidth = 1.1),
+          axis.line.y.left=element_line(linewidth = 1.1)
+          ) +
+    scale_color_manual(values=c("#3753a4ff","#3eb649ff","#ee2e2eff"),labels=c("DAPI","GFP-Ki67","MeCP2"))
+
+# High Ki-67 expression
+
+
+ggplot(merge_for_MeCP2_high, aes(x=distance,y=scaled_intensity)) + 
+    geom_line(aes(color=channel),size=1.5) +
+    theme_classic() +
+    theme(legend.title=element_blank(),
+          text = element_text(size=20),
+          axis.line.x.bottom=element_line(linewidth = 1.1),
+          axis.line.y.left=element_line(linewidth = 1.1)
+          ) +
+    scale_color_manual(values=c("#3753a4ff","#3eb649ff","#ee2e2eff"),labels=c("DAPI","GFP-Ki67","MeCP2"))
+
+```
+
+
 ### c
 
 #### Interphase
@@ -2900,6 +3022,84 @@ scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
 scale_color_manual(values = pal_jco()(10)[c(10,7)],guide=FALSE) + ggtitle("Human")
 ```
 
+## Supp. Fig 6
+
+```{r PSAP,echo=FALSE,message=FALSE,warning=FALSE,fig.height=4,fig.width=9}
+
+psap_human <- read_delim("PSAP_data/vanMierlo_prediction_data/prediction_RF_human_first_0to100_gero.tab", 
+                         "\t", escape_double = FALSE, trim_ws = TRUE)
+
+psap_xenopus <- read_delim("PSAP_data/vanMierlo_prediction_data/prediction_RF_xenopus_first_0to100_gero.tab", 
+                         "\t", escape_double = FALSE, trim_ws = TRUE)
+
+#Xenopus
+xenopus_psap_data <- cbind(psap_xenopus,subset=rep("Proteome",nrow(psap_xenopus)))
+
+phosphoproteomic_xenopus_psap <- psap_xenopus[psap_xenopus$acc %in% xenopus_data$ID,]
+xenopus_psap_data <- rbind(xenopus_psap_data,cbind(phosphoproteomic_xenopus_psap,subset=rep("Phospho-\nproteome",nrow(phosphoproteomic_xenopus_psap))))
+
+dynamic_xenopus_psap <- psap_xenopus[psap_xenopus$acc %in% unique(xenopus_ANOVA_data$Proteins),]
+xenopus_psap_data <- rbind(xenopus_psap_data,cbind(dynamic_xenopus_psap,subset=rep(" Dynamic",nrow(dynamic_xenopus_psap))))
+
+clusterA_xenopus_psap <- psap_xenopus[psap_xenopus$acc %in% clusterA,]
+xenopus_psap_data <- rbind(xenopus_psap_data,cbind(clusterA_xenopus_psap,subset=rep("Cluster A",nrow(clusterA_xenopus_psap))))
+
+clusterB_xenopus_psap <- psap_xenopus[psap_xenopus$acc %in% clusterB,]
+xenopus_psap_data <- rbind(xenopus_psap_data,cbind(clusterB_xenopus_psap,subset=rep("Cluster B",nrow(clusterB_xenopus_psap))))
+
+clusterC_xenopus_psap <- psap_xenopus[psap_xenopus$acc %in% clusterC,]
+xenopus_psap_data <- rbind(xenopus_psap_data,cbind(clusterC_xenopus_psap,subset=rep("Cluster C",nrow(clusterC_xenopus_psap))))
+
+clusterD_xenopus_psap <- psap_xenopus[psap_xenopus$acc %in% clusterD,]
+xenopus_psap_data <- rbind(xenopus_psap_data,cbind(clusterD_xenopus_psap,subset=rep("Cluster D",nrow(clusterD_xenopus_psap))))
+
+xenopus_psap_data$subset <- forcats::as_factor(xenopus_psap_data$subset)
+
+ggplot(xenopus_psap_data) + geom_violin(aes(x=subset,y=average,fill=subset),trim = F,adjust = .7) + 
+  geom_boxplot(aes(x=subset,y=average),width = 0.15) +
+  ggpubr::theme_classic2() +
+  theme(text = element_text(size=20),legend.position = "none",legend.title = element_blank(),axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed")) +
+  scale_y_continuous(name = "PSAP score",limits = c(-0.20, 1.2), breaks = c(seq(0, 1, by = 0.2))) +
+  scale_x_discrete() + xlab(NULL) +
+  scale_fill_manual(values = c("#00adeeff","#ffdd15ff","#f6921eff","#f6921eff","#f6921eff","#f6921eff","#f6921eff"))
+
+
+#Human
+human_psap_data <- cbind(psap_human,subset=rep("Proteome",nrow(psap_human)))
+
+phosphoproteomic_human_psap <- psap_human[psap_human$acc %in% human_data$`ACC#`,]
+human_psap_data <- rbind(human_psap_data,cbind(phosphoproteomic_human_psap,subset=rep("Phospho-\nproteome",nrow(phosphoproteomic_human_psap))))
+
+cdk_human_psap <- psap_human[psap_human$acc %in% subset(human_data,target=="Cdk1 target")$`ACC#`,]
+human_psap_data <- rbind(human_psap_data,cbind(cdk_human_psap,subset=rep("CDK",nrow(cdk_human_psap))))
+
+mapk_human_psap <- psap_human[psap_human$acc %in% subset(human_data,target_mapk=="mapk target")$`ACC#`,]
+human_psap_data <- rbind(human_psap_data,cbind(mapk_human_psap,subset=rep("MAPK",nrow(mapk_human_psap))))
+
+aurk_human_psap <- psap_human[psap_human$acc %in% subset(human_data,target_aurk=="aurk target")$`ACC#`,]
+human_psap_data <- rbind(human_psap_data,cbind(aurk_human_psap,subset=rep("AURK",nrow(aurk_human_psap))))
+
+plk_human_psap <- psap_human[psap_human$acc %in% subset(human_data,target_plk=="plk target")$`ACC#`,]
+human_psap_data <- rbind(human_psap_data,cbind(plk_human_psap,subset=rep("PLK",nrow(plk_human_psap))))
+
+nek_human_psap <- psap_human[psap_human$acc %in% subset(human_data,target_nek=="nek target")$`ACC#`,]
+human_psap_data <- rbind(human_psap_data,cbind(nek_human_psap,subset=rep("NEK",nrow(nek_human_psap))))
+
+dyrk_human_psap <- psap_human[psap_human$acc %in% subset(human_data,target_dyrk=="dyrk target")$`ACC#`,]
+human_psap_data <- rbind(human_psap_data,cbind(dyrk_human_psap,subset=rep("DYRK",nrow(dyrk_human_psap))))
+
+human_psap_data$subset <- forcats::as_factor(human_psap_data$subset)
+
+ggplot(human_psap_data) + geom_violin(aes(x=subset,y=average,fill=subset),trim = F,adjust = .7) + 
+  geom_boxplot(aes(x=subset,y=average),width = 0.15) +
+  ggpubr::theme_classic2() +
+  theme(text = element_text(size=20),legend.position = "none",legend.title = element_blank(),axis.ticks.x = element_blank(),panel.grid.major.y = element_line(colour = "grey",linetype = "dashed")) +
+  scale_y_continuous(name = "PSAP score",limits = c(-0.20, 1.2), breaks = c(seq(0, 1, by = 0.2))) +
+  scale_x_discrete() + xlab(NULL) +
+  scale_fill_manual(values = c("#00adeeff","#ffdd15ff",pal_tron()(7)[c(3,4,1,2,5,6)]))
+```
+
+
 ## Supp. Fig. 7
 
 ### Deleted LR domain
@@ -2957,7 +3157,7 @@ ggplot(dLR_quant,aes(x=Treatment, y=Foci_Nucleus)) +
 Repeats_LR_quant <- read_delim("Optodroplet_data/AlGhoul_data/SuppFig7_Repeats-LR.tab", 
                                 delim = "\t", escape_double = FALSE, 
                                 trim_ws = TRUE)
-kruskal.test(Foci_Nucleus ~ Treat_collapsed, data = dLR_quant)
+kruskal.test(Foci_Nucleus ~ Treat_collapsed, data = Repeats_LR_quant)
 
 # Kruskal-Wallis rank sum test
 # 
@@ -2997,3 +3197,7 @@ ggplot(Repeats_LR_quant,aes(x=Treatment, y=Foci_Nucleus)) +
   scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
   scale_color_manual(values = pal_jco()(10)[c(5,2)],guide="none")
 ```
+
+
+
+
