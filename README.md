@@ -20,6 +20,7 @@ J.M. Valverde & G. Dubra
     - [a](#a)
     - [b](#b-2)
   - [Fig. 6](#fig-6)
+    - [b](#b-3)
     - [c](#c-3)
     - [d](#d-2)
   - [Fig. 7](#fig-7)
@@ -30,6 +31,7 @@ J.M. Valverde & G. Dubra
     - [a](#a-1)
     - [d](#d-3)
     - [e](#e-1)
+  - [Supp. Fig 6](#supp-fig-6)
   - [Supp. Fig. 7](#supp-fig-7)
     - [Deleted LR domain](#deleted-lr-domain)
     - [Deleted N-terminus (Repeats +
@@ -347,6 +349,10 @@ code used in the paper is recompiled.
 
 ## Fig. 6
 
+### b
+
+![](README_files/figure-gfm/ki67%20microscopy%20-1.png)<!-- -->![](README_files/figure-gfm/ki67%20microscopy%20-2.png)<!-- -->![](README_files/figure-gfm/ki67%20microscopy%20-3.png)<!-- -->![](README_files/figure-gfm/ki67%20microscopy%20-4.png)<!-- -->
+
 ### c
 
 #### Interphase
@@ -503,6 +509,10 @@ the rest of the phosphoproteome with all available predictors
 
 ![](README_files/figure-gfm/human%20disorder%20percentage%20for%20all%20predictors%20-1.png)<!-- -->![](README_files/figure-gfm/human%20disorder%20percentage%20for%20all%20predictors%20-2.png)<!-- -->
 
+## Supp. Fig 6
+
+![](README_files/figure-gfm/PSAP-1.png)<!-- -->![](README_files/figure-gfm/PSAP-2.png)<!-- -->
+
 ## Supp. Fig. 7
 
 ### Deleted LR domain
@@ -535,7 +545,7 @@ the rest of the phosphoproteome with all available predictors
     ##  Kruskal-Wallis rank sum test
     ## 
     ## data:  Foci_Nucleus by Treat_collapsed
-    ## Kruskal-Wallis chi-squared = 204.5, df = 5, p-value < 2.2e-16
+    ## Kruskal-Wallis chi-squared = 147.74, df = 5, p-value < 2.2e-16
 
     ## 
     ##  Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
