@@ -434,7 +434,7 @@ save.image("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")}
 
 ## Fig. 1
 
-### c 
+### c
 
 ```{r embryo anova heatmap,echo=FALSE,message=FALSE,warning=FALSE,fig.height=7,fig.width=6}
 
@@ -713,7 +713,6 @@ pSites_Median_Norm_Full_Matrix_Unique_ID_tidy_v5 <- subset(pSites_Median_Norm_Fu
 
 
 ```
-
 
 ## Fig. 2
 
@@ -2093,10 +2092,9 @@ IupredXenopus <- IUpredScoresPlotGenerator(subset(all_predictions_phospho,ID %in
 
 ## Fig. 6
 
-
 ### b
 
-```{r ki67 microscopy ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=7}
+```{r ki67 microscopy ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=3,fig.width=6}
 
 #==========================================H3K9me3=========================================================#
 
@@ -2212,7 +2210,6 @@ ggplot(merge_for_MeCP2_high, aes(x=distance,y=scaled_intensity)) +
     scale_color_manual(values=c("#3753a4ff","#3eb649ff","#ee2e2eff"),labels=c("DAPI","GFP-Ki67","MeCP2"))
 
 ```
-
 
 ### c
 
@@ -3099,7 +3096,6 @@ ggplot(human_psap_data) + geom_violin(aes(x=subset,y=average,fill=subset),trim =
   scale_fill_manual(values = c("#00adeeff","#ffdd15ff",pal_tron()(7)[c(3,4,1,2,5,6)]))
 ```
 
-
 ## Supp. Fig. 7
 
 ### Deleted LR domain
@@ -3197,7 +3193,3 @@ ggplot(Repeats_LR_quant,aes(x=Treatment, y=Foci_Nucleus)) +
   scale_fill_manual(values = pal_jco()(10)[c(5,2)]) +
   scale_color_manual(values = pal_jco()(10)[c(5,2)],guide="none")
 ```
-
-
-
-
