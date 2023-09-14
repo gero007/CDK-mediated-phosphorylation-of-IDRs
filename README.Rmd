@@ -1028,7 +1028,9 @@ Heatmap(PeptideRatioResults_Wide_Complete_AsMatrix_Zscored, column_order = colna
 
 ```
 
+
 ### c
+
 
 ```{r single psites - biological processes ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=6,fig.width=5}
 PeptideRatioResults <- read.csv('phosphorylation_data/Valverde_data/Peptide_Ratio_Results.csv', stringsAsFactors = FALSE)
@@ -3304,7 +3306,9 @@ ggplot(dLR_quant,aes(x=Treatment, y=Foci_Nucleus)) +
   scale_color_manual(values = pal_jco()(10)[c(5,2)],guide="none")
 ```
 
+
 ### Deleted N-terminus (Repeats + LR)
+
 
 ```{r optodroplet quantification - Deleted N-terminus (Repeats + LR) ,echo=FALSE,message=FALSE,warning=FALSE,fig.height=5,fig.width=6}
 
