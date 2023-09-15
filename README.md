@@ -5,6 +5,7 @@ J.M. Valverde & G. Dubra
 - [Main figures](#main-figures)
   - [Fig. 1](#fig-1)
     - [c](#c)
+    - [g](#g)
   - [Fig. 2](#fig-2)
     - [b](#b)
     - [c](#c-1)
@@ -27,8 +28,13 @@ J.M. Valverde & G. Dubra
     - [c](#c-4)
 - [Supplemental information](#supplemental-information)
   - [Comparing predictors](#comparing-predictors)
-  - [Supp. Fig. 5](#supp-fig-5)
+  - [Supp. Fig. 3](#supp-fig-3)
     - [a](#a-1)
+    - [c](#c-5)
+  - [Supp. Fig. 4](#supp-fig-4)
+    - [c](#c-6)
+  - [Supp. Fig. 5](#supp-fig-5)
+    - [a](#a-2)
     - [d](#d-3)
     - [e](#e-1)
   - [Supp. Fig 6](#supp-fig-6)
@@ -51,6 +57,8 @@ code used in the paper is recompiled.
 ### c
 
 ![](README_files/figure-gfm/embryo%20anova%20heatmap-1.png)<!-- -->
+
+### g
 
 ## Fig. 2
 
@@ -481,6 +489,22 @@ Venn diagram is generated to illustrate the overlap between different
 methods
 
 ![](README_files/figure-gfm/compare%20index%20-1.png)<!-- -->![](README_files/figure-gfm/compare%20index%20-2.png)<!-- -->
+
+## Supp. Fig. 3
+
+### a
+
+![](README_files/figure-gfm/DNA%20rep%20factors-1.png)<!-- -->
+
+### c
+
+![](README_files/figure-gfm/overlap%20embry%20and%20extracts-1.png)<!-- -->![](README_files/figure-gfm/overlap%20embry%20and%20extracts-2.png)<!-- -->![](README_files/figure-gfm/overlap%20embry%20and%20extracts-3.png)<!-- -->![](README_files/figure-gfm/overlap%20embry%20and%20extracts-4.png)<!-- -->
+
+## Supp. Fig. 4
+
+### c
+
+![](README_files/figure-gfm/motifs%20logo-1.png)<!-- -->
 
 ## Supp. Fig. 5
 

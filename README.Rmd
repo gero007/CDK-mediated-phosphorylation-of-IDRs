@@ -51,6 +51,11 @@ library(tibble)
 library(forcats)
 library(ggseqlogo)
 library(Biostrings)
+library(gghighlight)
+library(Hmisc)
+library(ggstance)
+
+
 
 if (file.exists("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")) {
   load("~/CDK_mediated_phosphorylation_of_IDRs_WS.RData")
@@ -68,6 +73,7 @@ source("auxiliary_functions/contingencyTablesAnalysis_V2.R")
 source("auxiliary_functions/IUpredScoresPlotGenerator.R")
 # Load the functions to analyze sequence motifs
 source("auxiliary_functions/motifs_functions.R")
+
 
 #################################
 ######## Disorder data ##########
@@ -1090,7 +1096,7 @@ PeptideRatioResults_NoMVS <- PeptideRatioResults[!PeptideRatioResults$RatioLight
 
 PeptideRatioResults_NoMVS_mean <- PeptideRatioResults_NoMVS %>% 
   group_by(Peptide.Modified.Sequence, TimeMinutes) %>% 
-  summarize(average = mean(RatioLightToHeavy))
+  dplyr::summarize(average = mean(RatioLightToHeavy))
 
 #Plotting 
 
@@ -2915,6 +2921,190 @@ plot(euler(human_sets, shape = "ellipse"), quantities = TRUE)
 
 
 
+```
+
+
+## Supp. Fig. 3
+
+### a
+
+
+```{r DNA rep factors, echo=FALSE,message=FALSE,warning=FALSE,fig.height=8,fig.width=4}
+#Load data
+
+pSites <- read.csv('phosphorylation_data/Valverde_data/Phosphosites_XL_Extract_All_MedianNorm_SummaryStatistics_NoOA.csv', stringsAsFactors = F)
+
+
+#Creating unique identifier
+
+pSites_Unique_ID <- unite(pSites, 'Protein_Amino.acid_Site_NumberPhospho', c('Protein', 'Amino.acid', 'Position', 'Multiplicity'),
+                          sep ='|', remove = FALSE)
+
+#Filtering for ANOVA sig
+
+pSites_Unique_ID_ANOVA <- pSites_Unique_ID[pSites_Unique_ID$ANOVA.Significant == '+', ]
+
+#Df with only proteins of interest
+
+DNA_Reps <- c('mcm2', 'mcm3', 'mcm4', 'mcm5', 'mcm6', 'mcm7', 'mcm10', 'rif1', 'orc1', 'orc2', 'cdt1', 'cdc6', 'dpola', 'rpa1',
+              'rfc1', 'ctf4', 'wdhd1', 'mtbp', 'ticrr', 'recq4')
+
+pSites_Unique_ID_ANOVA_DNARep <- filter(pSites_Unique_ID_ANOVA, Protein %in% DNA_Reps)
+
+#Keeping only mean intensities and identifier
+
+pSites_Unique_ID_ANOVA_DNARep_Means <- pSites_Unique_ID_ANOVA_DNARep[, c(21, 39:45)]
+
+#Transforming to numeric matrix
+
+pSites_Unique_ID_ANOVA_DNARep_Means_Matrix <-
+  as.matrix(sapply(pSites_Unique_ID_ANOVA_DNARep_Means, as.numeric))
+
+#Adding row names
+
+rownames(pSites_Unique_ID_ANOVA_DNARep_Means_Matrix) <- pSites_Unique_ID_ANOVA_DNARep_Means[, 1]
+
+#Removing useless column
+
+pSites_Unique_ID_ANOVA_DNARep_Means_Matrix <- pSites_Unique_ID_ANOVA_DNARep_Means_Matrix[,-1]
+
+#Scaling
+
+pSites_Unique_ID_ANOVA_DNARep_Means_Matrix_Scaled <- t(scale(t(pSites_Unique_ID_ANOVA_DNARep_Means_Matrix)))
+
+#Creating palette
+
+library(circlize)
+col_fun = colorRamp2(c(-2.2, 0, 2.2), c("cyan", "black", "yellow"))
+
+#Creating heat map
+
+ha = rowAnnotation(foo = anno_mark(at = c(2, 3, 8, 9, 10, 11, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 40, 41, 42, 43, 44, 45,
+                                          47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 61, 62, 63, 64, 66, 67, 68, 69, 70, 71), 
+                                   labels = c('MCM10-S206', 'MCM10-S596', 'MCM4-S31', 'MCM4-S88', 'MCM4-S120', 'MCM4-S145',
+                                              'TICRR-S978', 'TICRR-S1941', 'TICRR-S1763', 'TICRR-S1660', 'TICRR-S1833', 'CDC6-S70',
+                                              'CDC6-S8', 'RECQ4-S151', 'RECQ4-S310', 'RPA1-S1490', 'RIF1-S904', 'RIF1-S1166', 'RIF1-S1439',
+                                              'RIF1-S1515', 'RIF1-S1782', 'RIF1-S870', 'RIF1-S1728', 'RIF1-S1989', 'ORC2-T115', 'ORC2-T157',
+                                              'TICRR-T1261', 'TICRR-T1167', 'TICRR-T1617', 'TICRR-T1728', 'ORC1-T332', 'ORC1-T401', 'RIF1-T690',
+                                              'RIF1-T1385', 'RIF1-T453', 'MCM4-S31(2)', 'MCM4-S87(2)', 'MCM4-S3(2)', 'TICRR-S973(2)', 'TICRR-S978(2)',
+                                              'RIF1-S1439(2)', 'RIF1-S1717(2)', 'RIF1-S1719(2)', 'MCM4-T23(2)', 'MCM4-T94(2)', 'MCM4-T7(2)',
+                                              'TICRR-T1300(2)', 'MCM4-S87(3)', 'MCM4-S88(3)', 'RIF1-S1439(3)', 'RIF1-S1450(3)', 'MCM4-T94(3)', 'RIF1-S1430(3)'), labels_gp = gpar(fontsize = 6)))
+
+Heatmap(pSites_Unique_ID_ANOVA_DNARep_Means_Matrix_Scaled, 
+        column_order = colnames(pSites_Unique_ID_ANOVA_DNARep_Means_Matrix_Scaled),
+        show_row_names = TRUE, clustering_distance_rows = 'pearson', show_row_dend = FALSE,
+        clustering_method_rows = 'average', name = 'Z-Score', col = col_fun, row_dend_width = unit(4.5, 'cm'),
+        row_names_gp = gpar(fontsize = 8), right_annotation = ha,
+        column_names_rot = 45)
+
+```
+
+### c
+
+
+```{r overlap embry and extracts, echo=FALSE,message=FALSE,warning=FALSE,fig.height=8,fig.width=4}
+col_fun = colorRamp2(c(-3, 0, 3), c("cyan", "black", "yellow"))
+
+#Load data
+
+pSites_Median_Norm_Full_Matrix_Statistics <- read.csv('phosphorylation_data/Valverde_data/All_pSites_Log2_Normalized_Imputed_ANOVA_Statistics.csv', stringsAsFactors = F)
+
+#Creating unique useful identifier
+
+pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID <- unite(pSites_Median_Norm_Full_Matrix_Statistics, 
+                                                  'Protein_Amino.acid_Site_NumberPhospho', 
+                                                  c('Protein', 'Amino.acid', 'Position', 'Multiplicity'),
+                                                  sep ='|', remove = FALSE)
+
+#Df with only intensities of time point of interest
+
+pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int <- 
+  pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID[, c(24, 52:57, 59, 62:67, 69)]
+
+#reordering columns
+
+col_order <- c('Mean.Interphase_000', "Mean.Interphase_030", 'Mean.Interphase_060', 'Mean.Interphase_090',
+               'Mean.Interphase_120', 'Mean.Mitosis_CyB',  'Mean.Mitosis_CSF',
+               'Median.Interphase_000', "Median.Interphase_030", 'Median.Interphase_060', 'Median.Interphase_090',
+               'Median.Interphase_120', 'Median.Mitosis_CyB', 'Median.Mitosis_CSF', 
+               'Protein_Amino.acid_Site_NumberPhospho')
+
+pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered <- pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int[, col_order]
+
+#Transforming to matrix
+
+pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix <-
+  as.matrix(sapply(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered, as.numeric))
+
+#adding rownames
+
+rownames(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix) <- pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered[, 15]
+
+#removing useless column
+
+pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy <- pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix[, -c(15)]
+
+#Changing column names
+
+colnames(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy) <- c("DNA replication - 00'(mean)", "DNA replication - 30'(mean)",
+                                                                                           "DNA replication - 60'(mean)", "DNA replication - 90'(mean)",
+                                                                                           "DNA replication - 120'(mean)", "Mitosis - Cyclin B - 60'(mean)",
+                                                                                           "Mitosis - Metaphase arrested (CSF)(mean)",
+                                                                                           "DNA replication - 00'(median)", "DNA replication - 30'(median)",
+                                                                                           "DNA replication - 60'(median)", "DNA replication - 90'(median)",
+                                                                                           "DNA replication - 120'(median)", "Mitosis - Cyclin B - 60'(median)",
+                                                                                           "Mitosis - Metaphase arrested (CSF)(median)")
+
+#Plotting with Complex Heat map
+#Scaling is needed, not done automatically by Complex Heat Map
+
+pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy_Scaled <-
+  t(scale(t(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy)))
+
+#Creating vector that includes values to plot#
+#Loading overlap for each cluster
+
+Embryo_A_Extract_ANOVA <- read.csv('phosphorylation_data/Valverde_data/Embryo_A_Extract_ANOVA.csv', stringsAsFactors = FALSE)
+
+Embryo_B_Extract_ANOVA <- read.csv('phosphorylation_data/Valverde_data/Embryo_B_Extract_ANOVA.csv', stringsAsFactors = FALSE)
+
+Embryo_C_Extract_ANOVA <- read.csv('phosphorylation_data/Valverde_data/Embryo_C_Extract_ANOVA.csv', stringsAsFactors = FALSE)
+
+Embryo_D_Extract_ANOVA <- read.csv('phosphorylation_data/Valverde_data/Embryo_D_Extract_ANOVA.csv', stringsAsFactors = FALSE)
+
+
+#Subsetting
+Embryo_A_Extract_ANOVA_Averages <- subset(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy_Scaled, 
+                                          rownames(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy_Scaled) %in% Embryo_A_Extract_ANOVA[,1])
+Embryo_B_Extract_ANOVA_Averages <- subset(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy_Scaled, 
+                                          rownames(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy_Scaled) %in% Embryo_B_Extract_ANOVA[,1])
+Embryo_C_Extract_ANOVA_Averages <- subset(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy_Scaled, 
+                                             rownames(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy_Scaled) %in% Embryo_C_Extract_ANOVA[,1])
+Embryo_D_Extract_ANOVA_Averages <- subset(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy_Scaled, 
+                                          rownames(pSites_Median_Norm_Full_Matrix_Statistics_Unique_ID_Int_ordered_Matrix_Tidy_Scaled) %in% Embryo_D_Extract_ANOVA[,1])
+
+#Plotting#
+
+
+Heatmap(Embryo_A_Extract_ANOVA_Averages[, c(1:7)], 
+             column_order = colnames(Embryo_A_Extract_ANOVA_Averages[, c(1:7)]),
+             show_row_names = FALSE, clustering_distance_rows = 'spearman',
+             clustering_method_rows = 'complete', name = 'Z-Score', column_names_rot = 45, col = col_fun, column_title = "Cluster A")
+
+Heatmap(Embryo_B_Extract_ANOVA_Averages[, c(1:7)], 
+             column_order = colnames(Embryo_A_Extract_ANOVA_Averages[, c(1:7)]),
+             show_row_names = FALSE, clustering_distance_rows = 'spearman',
+             clustering_method_rows = 'complete', name = 'Z-Score', column_names_rot = 45, col = col_fun, column_title="Cluster B")
+
+Heatmap(Embryo_C_Extract_ANOVA_Averages[, c(1:7)], 
+             column_order = colnames(Embryo_A_Extract_ANOVA_Averages[, c(1:7)]),
+             show_row_names = FALSE, clustering_distance_rows = 'spearman',
+             clustering_method_rows = 'complete', name = 'Z-Score', column_names_rot = 45, col = col_fun, column_title="Cluster C")
+
+Heatmap(Embryo_D_Extract_ANOVA_Averages[, c(1:7)], 
+             column_order = colnames(Embryo_A_Extract_ANOVA_Averages[, c(1:7)]),
+             show_row_names = FALSE, clustering_distance_rows = 'spearman',
+             clustering_method_rows = 'complete', name = 'Z-Score', column_names_rot = 45, col = col_fun, column_title="Cluster D")
 ```
 
 ## Supp. Fig. 4
