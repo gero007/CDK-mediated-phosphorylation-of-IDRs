@@ -5,6 +5,7 @@ J.M. Valverde & G. Dubra
 - [Main figures](#main-figures)
   - [Fig. 1](#fig-1)
     - [c](#c)
+    - [e](#e)
     - [g](#g)
   - [Fig. 2](#fig-2)
     - [b](#b)
@@ -15,7 +16,7 @@ J.M. Valverde & G. Dubra
     - [b](#b-1)
     - [c](#c-2)
     - [d](#d-1)
-    - [e](#e)
+    - [e](#e-1)
     - [f](#f-1)
   - [Fig. 4](#fig-4)
     - [a](#a)
@@ -33,10 +34,11 @@ J.M. Valverde & G. Dubra
     - [c](#c-5)
   - [Supp. Fig. 4](#supp-fig-4)
     - [c](#c-6)
+    - [d](#d-3)
   - [Supp. Fig. 5](#supp-fig-5)
     - [a](#a-2)
-    - [d](#d-3)
-    - [e](#e-1)
+    - [d](#d-4)
+    - [e](#e-2)
   - [Supp. Fig 6](#supp-fig-6)
   - [Supp. Fig. 7](#supp-fig-7)
     - [Deleted LR domain](#deleted-lr-domain)
@@ -57,6 +59,10 @@ code used in the paper is recompiled.
 ### c
 
 ![](README_files/figure-gfm/embryo%20anova%20heatmap-1.png)<!-- -->
+
+### e
+
+![](README_files/figure-gfm/extracts%20anova%20heatmap-1.png)<!-- -->
 
 ### g
 
@@ -498,13 +504,17 @@ methods
 
 ### c
 
-![](README_files/figure-gfm/overlap%20embry%20and%20extracts-1.png)<!-- -->![](README_files/figure-gfm/overlap%20embry%20and%20extracts-2.png)<!-- -->![](README_files/figure-gfm/overlap%20embry%20and%20extracts-3.png)<!-- -->![](README_files/figure-gfm/overlap%20embry%20and%20extracts-4.png)<!-- -->
+![](README_files/figure-gfm/overlap%20embryo%20and%20extracts-1.png)<!-- -->![](README_files/figure-gfm/overlap%20embryo%20and%20extracts-2.png)<!-- -->![](README_files/figure-gfm/overlap%20embryo%20and%20extracts-3.png)<!-- -->![](README_files/figure-gfm/overlap%20embryo%20and%20extracts-4.png)<!-- -->
 
 ## Supp. Fig. 4
 
 ### c
 
 ![](README_files/figure-gfm/motifs%20logo-1.png)<!-- -->
+
+### d
+
+![](README_files/figure-gfm/extracts%20line%20plots%20all%20kinases-1.png)<!-- -->![](README_files/figure-gfm/extracts%20line%20plots%20all%20kinases-2.png)<!-- -->
 
 ## Supp. Fig. 5
 
